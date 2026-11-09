@@ -103,3 +103,15 @@ button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f
 .history-actions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:8px}
 .history-actions button{min-height:44px;padding:6px 8px;font-size:12px;white-space:nowrap}
 .history-actions .history-share{display:inline-flex;align-items:center;gap:4px;background:transparent;color:var(--accent);border:1px solid currentColor}
+
+#sheetApp .navtabs button:not(.active),#sheetApp .sheet .first,#sheetApp .sheet .total td{
+  background:var(--theme-muted,#f3f3f5);color:var(--theme-text,#171b21)
+}
+#sheetApp .sheet :is(th,td),#sheetApp .history-table :is(th,td),#sheetApp .sheet-wrap{
+  border-color:var(--theme-border,#e4e4e7)
+}
+#sheetApp .sheet input.score{background:var(--theme-surface,#fff);border-color:var(--theme-border,#e4e4e7)}
+#sheetApp .sheet .total td.negative,#sheetApp .sheet input.score.negative{
+  color:#a52740;-webkit-text-fill-color:#a52740
+}
+#sheetApp .sheet tr.score-warning input.score{background:#fff1ef;border-color:#ce6b60}

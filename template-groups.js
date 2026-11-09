@@ -58,6 +58,7 @@ function initTemplateGroups(cloud) {
   };
   const el = name => document.getElementById(name);
   const form = el('groupSettings');
+  const palette = el('paletteSettings');
   let logoUrl, scoreUrl;
   let database;
 
@@ -107,7 +108,7 @@ function initTemplateGroups(cloud) {
     return mode === 'custom' ? custom || choices.auto : choices[mode];
   }
   function updateHeader() {
-    const color = headerFor(form.elements.theme.value, headerMode.value, customColor);
+    const color = headerFor(palette.elements.theme.value, headerMode.value, customColor);
     el('headerSliders').hidden = headerMode.value !== 'custom';
     colorCode.value = color.toUpperCase();
     applyHeaderColor(color);
@@ -120,7 +121,7 @@ function initTemplateGroups(cloud) {
     sliders[1].value = delta ? Math.round(100*delta/(1-Math.abs(2*light-1))) : 0;
     sliders[2].value = Math.round(light*100);
   }
-  if (form) {
+  if (palette) {
   headerMode.onchange = updateHeader;
   for (const slider of sliders) slider.oninput = () => {
     const [h,s,l] = sliders.map(input => Number(input.value));
@@ -161,22 +162,27 @@ function initTemplateGroups(cloud) {
     location.assign(url);
   }
 
-  function render() {
-    el('groupTitle').textContent = settings.name;
-    if (form) {
-      el('groupName').value = settings.name;
-      const selectedTheme = themes[settings.theme] ? settings.theme : defaults.theme;
+  function renderPalette() {
+    const selectedTheme = Object.hasOwn(themes, settings.theme) ? settings.theme : defaults.theme;
+    applyTheme(selectedTheme);
+    if (palette) {
       renderThemeChoices(selectedTheme);
-      el('groupRules').value = settings.rules;
       headerMode.value = savedMode();
       customColor = /^#[0-9a-f]{6}$/i.test(settings.headerColor) ? settings.headerColor : headerFor(selectedTheme,'auto');
       initializeSliders(customColor);
       updateHeader();
+    } else {
+      applyHeaderColor(headerFor(selectedTheme,savedMode(),settings.headerColor));
+    }
+  }
+
+  function render() {
+    el('groupTitle').textContent = settings.name;
+    if (form) {
+      el('groupName').value = settings.name;
+      el('groupRules').value = settings.rules;
     }
     el('groupRulesPreview').textContent = settings.rules || 'ルールは未設定です。';
-    applyTheme(settings.theme);
-    if (!form) applyHeaderColor(headerFor(settings.theme,savedMode(),settings.headerColor));
-
     if (logoUrl) URL.revokeObjectURL(logoUrl);
     if (scoreUrl) URL.revokeObjectURL(scoreUrl);
     logoUrl = settings.logo instanceof Blob ? URL.createObjectURL(settings.logo) : null;
@@ -252,10 +258,9 @@ function initTemplateGroups(cloud) {
     event.preventDefault();
     const name = el('groupName').value.trim();
     if (!name) return;
-    const submit = event.submitter;
-    submit.disabled = true;
+    setSaving(true);
     try {
-      const next = { ...settings, name, theme: form.elements.theme.value, headerMode: headerMode.value, headerColor: headerFor(form.elements.theme.value, headerMode.value, customColor), rules: el('groupRules').value };
+      const next = { ...settings, name, rules: el('groupRules').value };
       const logoFile = el('groupLogoFile').files[0];
       const scoreFile = el('groupScoreFile').files[0];
       if (logoFile) {
@@ -287,18 +292,41 @@ function initTemplateGroups(cloud) {
         ? '端末の保存容量が不足しています。'
         : error.message;
     } finally {
-      submit.disabled = false;
+      setSaving(false);
+    }
+  };
+  const saveButtons = [form, palette].map(section => section?.querySelector('button[type=submit]')).filter(Boolean);
+  function setSaving(disabled) {
+    for (const button of saveButtons) button.disabled = disabled;
+  }
+  if (palette) palette.onsubmit = async event => {
+    event.preventDefault();
+    const theme = palette.elements.theme.value;
+    const appearance = { theme, headerMode: headerMode.value, headerColor: headerFor(theme, headerMode.value, customColor) };
+    const status = el('paletteStatus');
+    setSaving(true);
+    try {
+      const next = { ...settings, ...appearance };
+      if (cloud) await cloud.save(next);
+      else await accessSettings('readwrite', records => records.put(next, id));
+      Object.assign(settings, appearance);
+      status.textContent = '配色を保存しました。';
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      setSaving(false);
     }
   };
   render();
-  const submit = form?.querySelector('button[type=submit]');
-  if (submit) submit.disabled = true;
+  renderPalette();
+  setSaving(true);
   accessSettings('readonly', records => records.get(id))
     .then(saved => {
       if (saved) Object.assign(settings, cloud ? { logo: saved.logo, score: saved.score } : saved);
       render();
+      renderPalette();
     })
     .catch(() => { if (form) el('groupStatus').textContent = 'ブラウザのファイル保存領域を開けませんでした。'; })
-    .finally(() => { if (submit) submit.disabled = false; });
+    .finally(() => setSaving(false));
   return prefix;
 }

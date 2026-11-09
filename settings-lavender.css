@@ -9,3 +9,5 @@
 .lavender-settings .brand-header{border-bottom-color:#c6b1f8;border-radius:20px}
 #headerSliders label{display:grid;grid-template-columns:5em minmax(0,1fr);align-items:center;gap:8px}
 #headerSliders input[type=range]{width:100%;min-height:44px;padding:0}
+.lavender-settings .palette-example{display:flex;flex-wrap:wrap;gap:14px;background:var(--theme-muted);color:var(--theme-text);border:1px solid var(--theme-border);border-radius:10px;padding:12px;margin:12px 0}
+.lavender-settings #paletteSettings button[type=submit]{background:var(--accent)}

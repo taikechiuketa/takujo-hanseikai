@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#f5f2fc">
 <title>卓の設定｜卓上反省会</title>
-<link rel="stylesheet" href="./sheet.css?v=ranking-options-1">
-<link rel="stylesheet" href="./settings-lavender.css?v=2">
+<link rel="stylesheet" href="./sheet.css?v=palette-save-1">
+<link rel="stylesheet" href="./settings-lavender.css?v=3">
 <script defer src="./vendor/supabase-2.119.0.js"></script>
-<script defer src="./template-groups.js?v=palette-10"></script>
-<script defer src="./cloud-sheet.js?v=palette-10"></script>
+<script defer src="./template-groups.js?v=palette-save-1"></script>
+<script defer src="./cloud-sheet.js?v=palette-save-1"></script>
 <script defer src="./ranking-options.js"></script>
 <script defer src="./settings-page.js?v=ranking-options-1"></script>
 </head>
@@ -17,14 +17,10 @@
 <p id="settingsLoadStatus" role="status">卓の設定を読み込み中…</p>
 <div id="settingsApp" hidden>
 <header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>グループ設定の試作版 · このブラウザに保存</p></div></header>
-<section class="card" id="appearanceCard">
-  <h2>卓の設定</h2>
-  <div class="buttons" id="localGroupControls" hidden><label>グループ <select id="groupPicker"></select></label><button type="button" id="createGroup">新しいグループ</button></div>
-  <details id="appearanceSettings" open>
-    <summary>名前・配色・ルール・点数表を編集</summary>
-    <form id="groupSettings">
-      <p><label>グループ名 <input id="groupName" required maxlength="60"></label></p>
-      <fieldset class="theme-field"><legend>配色テーマ</legend><div id="themeChoices" class="theme-choices"></div><p class="hint">選ぶと画面にプレビューされます。「設定を保存」で確定します。</p></fieldset>
+<section class="card palette-card">
+  <h2>配色設定</h2>
+  <form id="paletteSettings">
+      <fieldset class="theme-field"><legend>配色テーマ</legend><div id="themeChoices" class="theme-choices"></div><p class="hint">選ぶと画面にプレビューされます。「配色を保存」で確定します。</p></fieldset>
       <fieldset class="theme-field">
         <legend>ヘッダーの背景色</legend>
         <label>色の選び方 <select id="headerMode"><option value="auto">テーマに合わせる</option><option value="light">淡色</option><option value="dark">濃色</option><option value="neutral">ニュートラル</option><option value="custom">自由指定</option></select></label>
@@ -35,6 +31,17 @@
         </div>
         <p class="hint">プレビュー中の色 <output id="headerColorCode"></output></p>
       </fieldset>
+    <div class="palette-example" aria-label="配色の見本"><strong>半荘スコアの見本</strong><span>+28 pt</span><span class="negative">−12 pt</span></div>
+    <button type="submit">配色を保存</button> <span id="paletteStatus" role="status"></span>
+  </form>
+</section>
+<section class="card" id="appearanceCard">
+  <h2>卓の設定</h2>
+  <div class="buttons" id="localGroupControls" hidden><label>グループ <select id="groupPicker"></select></label><button type="button" id="createGroup">新しいグループ</button></div>
+  <details id="appearanceSettings" open>
+    <summary>名前・ルール・点数表を編集</summary>
+    <form id="groupSettings">
+      <p><label>グループ名 <input id="groupName" required maxlength="60"></label></p>
       <div class="file-row"><strong>ロゴ画像</strong><label class="file-picker">ロゴ画像を選ぶ<input id="groupLogoFile" type="file" accept="image/png,image/jpeg,image/webp" aria-label="ロゴ画像を選ぶ"></label><span id="logoSelection" role="status"></span><label><input id="removeLogo" type="checkbox">ロゴを削除</label></div>
       <p><label>ルール本文<br><textarea id="groupRules" rows="5" maxlength="12000"></textarea></label></p>
       <div class="file-row"><strong>点数表</strong><label class="file-picker">画像・PDFを選ぶ<input id="groupScoreFile" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" aria-label="点数表の画像・PDFを選ぶ"></label><span id="scoreSelection" role="status"></span><label><input id="removeScore" type="checkbox">点数表を削除</label></div>
