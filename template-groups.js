@@ -179,6 +179,12 @@ function initTemplateGroups(cloud) {
     }
   }
 
+  const rulesField = el('groupRules');
+  const rulesDraft = el('groupRulesDraft');
+  const rulesToolbar = el('groupRulesToolbar');
+  const ruleText = window.TakujoRuleText;
+  if (ruleText && rulesField && rulesToolbar && rulesDraft) ruleText.attach(rulesField, rulesToolbar, rulesDraft);
+
   function render() {
     el('groupTitle').textContent = settings.name;
     if (palette) el('palettePreviewGroup').textContent = settings.name;
@@ -186,7 +192,10 @@ function initTemplateGroups(cloud) {
       el('groupName').value = settings.name;
       el('groupRules').value = settings.rules;
     }
-    el('groupRulesPreview').textContent = settings.rules || 'ルールは未設定です。';
+    if (ruleText) {
+      ruleText.render(el('groupRulesPreview'), settings.rules);
+      if (rulesDraft) ruleText.render(rulesDraft, settings.rules);
+    } else el('groupRulesPreview').textContent = settings.rules || 'ルールは未設定です。';
     if (logoUrl) URL.revokeObjectURL(logoUrl);
     if (scoreUrl) URL.revokeObjectURL(scoreUrl);
     logoUrl = settings.logo instanceof Blob ? URL.createObjectURL(settings.logo) : null;
