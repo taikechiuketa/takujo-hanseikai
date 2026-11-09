@@ -6,6 +6,10 @@ async function start() {
     'https://aexmoblpehhcqptvagxh.supabase.co',
     'sb_publishable_USpY-tMqtrFiUCK_ISwqjw_F0z2r1ha',
   );
+  if (new URLSearchParams(location.search).get('notice') === 'group-deleted') {
+    message('グループを削除しました。');
+    history.replaceState(null, '', location.pathname);
+  }
   const auth = el('auth');
   const form = el('groupForm');
   let userId;

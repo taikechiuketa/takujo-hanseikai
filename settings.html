@@ -8,8 +8,8 @@
 <link rel="stylesheet" href="./sheet.css?v=themes-2">
 <script defer src="./vendor/supabase-2.119.0.js"></script>
 <script defer src="./template-groups.js?v=themes-2"></script>
-<script defer src="./cloud-sheet.js?v=split-1"></script>
-<script defer src="./settings-page.js"></script>
+<script defer src="./cloud-sheet.js?v=delete-1"></script>
+<script defer src="./settings-page.js?v=delete-1"></script>
 </head>
 <body><main><p><a href="./account.html">← グループ一覧</a> <a id="playLink" hidden>対局を入力</a></p>
 <p id="settingsLoadStatus" role="status">卓の設定を読み込み中…</p>
@@ -37,4 +37,21 @@
     <img id="groupScorePreview" alt="登録した点数表" hidden><a id="groupScoreLink" download hidden>点数表をダウンロード</a>
   </details>
 </section>
+<section class="card" id="groupDeleteSection" hidden>
+  <h2>グループの削除</h2>
+  <p>この卓と、DBに保存した対局履歴・プレイヤーマスターを削除します。元には戻せません。</p>
+  <button type="button" class="danger" id="openGroupDelete">グループを削除</button>
+</section>
+<dialog id="groupDeleteDialog" aria-labelledby="groupDeleteTitle">
+  <h2 id="groupDeleteTitle">グループを完全に削除</h2>
+  <p id="groupDeletePrompt"></p>
+  <form id="groupDeleteForm">
+    <label>確認のため卓名を入力 <input name="confirmation" required autocomplete="off"></label>
+    <p id="groupDeleteStatus" role="status"></p>
+    <div class="buttons">
+      <button type="button" class="secondary" id="cancelGroupDelete">キャンセル</button>
+      <button type="submit" class="danger">削除する</button>
+    </div>
+  </form>
+</dialog>
 </div></main></body></html>

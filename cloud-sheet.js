@@ -19,6 +19,12 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
     id: 'cloud:' + auth.user.id + ':' + groupId,
     name: group.name,
     settings: group.settings,
+    async remove(name) {
+      if (name !== savedName) throw new Error('現在の卓名を確認してください。');
+      const { data, error } = await db.from('groups').delete()
+        .eq('id', groupId).eq('owner_id', auth.user.id).eq('name', name).select('id').maybeSingle();
+      if (error || !data) throw new Error('削除を確認できませんでした。グループ一覧を開き直して確認してください。');
+    },
     async save(next) {
       const settings = { ...savedSettings, theme: next.theme, headerColor: next.headerColor, rules: next.rules };
       const { data, error } = await db.from('groups').update({ name: next.name, settings })
