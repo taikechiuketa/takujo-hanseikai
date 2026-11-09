@@ -71,3 +71,8 @@ button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f
 
 .theme-dot{width:25px;height:16px;border:1px solid var(--theme-border,#ddd);border-radius:4px}
 .theme-choices{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+
+[data-chip].negative-chip{color:#b42332;font-weight:700}
+#saveToast{position:fixed;z-index:100;bottom:max(1rem,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 2rem);padding:.8rem 1rem;border-radius:12px;background:#172322;color:#fff;box-shadow:0 4px 18px #0005;pointer-events:none}
+
+.navtabs[hidden]{display:none}

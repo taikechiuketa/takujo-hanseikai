@@ -1,4 +1,4 @@
-async function openCloudSheet(groupId, settingsOnly = false) {
+async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
   if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(groupId)) {
     throw new Error('グループ一覧から卓を開いてください。');
   }
@@ -59,16 +59,16 @@ async function openCloudSheet(groupId, settingsOnly = false) {
   const el = id => document.getElementById(id);
   const status = el('cloudStatus');
   const storageData = new Map([
-    ['current', JSON.stringify(group.sheet_draft)],
+    ['current', JSON.stringify(readOnly ? null : group.sheet_draft)],
     ['history', JSON.stringify(history)],
     ['players', JSON.stringify(group.sheet_players)],
   ]);
   const serverSnapshot = JSON.stringify([...storageData]);
   const recoveryKey = 'hansei-sheet-draft:' + auth.user.id + ':' + groupId;
   let recovery;
-  try { recovery = JSON.parse(localStorage.getItem(recoveryKey)); } catch {}
+  try { if (!readOnly) recovery = JSON.parse(localStorage.getItem(recoveryKey)); } catch {}
   const sameBase = recovery && recovery.revision === group.sheet_revision;
-  const alreadySaved = recovery?.pending?.payload.request_id === group.sheet_revision;
+  const alreadySaved = Boolean(recovery?.pending) && recovery.pending.payload.request_id === group.sheet_revision;
   const restore = sameBase || alreadySaved;
   const conflict = recovery && !restore;
   if (restore) {
@@ -82,6 +82,7 @@ async function openCloudSheet(groupId, settingsOnly = false) {
   };
   return {
     storage,
+    displayAppearance() { initTemplateGroups(appearance); },
     save: null,
     savePlayers: null,
     connect(keys) {
@@ -189,12 +190,14 @@ async function openCloudSheet(groupId, settingsOnly = false) {
               pending = undefined;
               keepDraft();
               status.textContent = '別の画面から更新されています。入力内容をJSONで退避し、再読み込みしてください。';
+            keys.notify(status.textContent);
               return;
             }
             if (saveError.code !== 'FETCH_ERROR' && saveError.code) pending = undefined;
             keepDraft();
             button.hidden = false;
             status.textContent = '保存できませんでした。入力を確認して再試行してください。';
+            keys.notify(status.textContent);
             return;
           }
           revision = data;
@@ -203,9 +206,11 @@ async function openCloudSheet(groupId, settingsOnly = false) {
           keepDraft();
           button.hidden = snapshot() === lastSaved;
           status.textContent = button.hidden ? 'DBに保存しました。' : '先ほどの保存は完了しました。残りの変更を保存してください。';
+          keys.notify(status.textContent);
         } catch {
           button.hidden = false;
           status.textContent = '保存結果を確認できませんでした。再試行してください。';
+            keys.notify(status.textContent);
         } finally { button.disabled = false; }
       };
     },
