@@ -91,6 +91,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
     displayAppearance() { initTemplateGroups(appearance); },
     save: null,
     savePlayers: null,
+    hasUnsavedPlayers: () => false,
     connect(keys) {
       initTemplateGroups(appearance);
       el('cloudControls').hidden = false;
@@ -98,6 +99,8 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
       const snapshot = () => JSON.stringify([...storageData]);
       let lastSaved = restore ? (alreadySaved ? recovery.pending.snapshot : serverSnapshot) : snapshot();
       let revision = group.sheet_revision;
+      this.hasUnsavedPlayers = () => Boolean(conflict) ||
+        new Map(JSON.parse(lastSaved)).get(keys.master) !== storage.getItem(keys.master);
       let pending = sameBase ? recovery.pending : undefined;
       const button = el('cloudSave');
       function keepDraft() {
@@ -145,17 +148,31 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
         if (button.disabled) return '別の保存が進行中です。完了後に再試行してください。';
         if (pending) return '対局の保存結果が未確認です。画面上部から再試行してください。';
         const players = storage.getItem(keys.master);
+        if (!this.hasUnsavedPlayers()) return '';
         const nextRevision = crypto.randomUUID();
         button.disabled = true;
         try {
-          const query = db.from('groups').update({
-            sheet_players: JSON.parse(players), sheet_revision: nextRevision,
-          }).eq('id', groupId);
-          const { data, error } = await (revision === null
-            ? query.is('sheet_revision', null)
-            : query.eq('sheet_revision', revision)).select('id').maybeSingle();
-          if (error) throw error;
-          if (!data) return '別の画面で卓が更新されました。下書きを保持しています。';
+          let confirmed = false;
+          try {
+            const query = db.from('groups').update({
+              sheet_players: JSON.parse(players), sheet_revision: nextRevision,
+            }).eq('id', groupId);
+            const { data, error } = await (revision === null
+              ? query.is('sheet_revision', null)
+              : query.eq('sheet_revision', revision)).select('id').maybeSingle();
+            confirmed = !error && Boolean(data);
+          } catch {
+            // The update may have committed before the response was lost.
+          }
+          if (!confirmed) {
+            const { data, error } = await db.from('groups')
+              .select('sheet_revision,sheet_players').eq('id', groupId).maybeSingle();
+            if (error || !data) throw new Error('Unable to verify the write');
+            if (data.sheet_revision !== nextRevision) {
+              if (data.sheet_revision !== revision) return '別の画面で卓が更新されました。対局画面を開き直して下書きを確認してください。';
+              return 'プレイヤーマスターを保存できませんでした。再試行してください。';
+            }
+          }
           revision = nextRevision;
           const saved = new Map(JSON.parse(lastSaved ?? '[]'));
           saved.set(keys.master, players);
@@ -213,6 +230,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
           button.hidden = snapshot() === lastSaved;
           status.textContent = button.hidden ? 'DBに保存しました。' : '先ほどの保存は完了しました。残りの変更を保存してください。';
           keys.notify(status.textContent);
+          keys.onSaved();
         } catch {
           button.hidden = false;
           status.textContent = '保存結果を確認できませんでした。再試行してください。';
