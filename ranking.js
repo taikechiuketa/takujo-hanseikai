@@ -16,14 +16,98 @@ async function showSharedRanking() {
   const currentMonth = new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit',
   }).format(new Date());
+  const mode = el('rankingMode');
+  const content = el('rankingContent');
+  function element(tag, text) {
+    const node = document.createElement(tag);
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+  function formatted(key, value) {
+    if (value == null) return '—';
+    if (key === 'placements') return value.map((count, i) => (i + 1) + '着 ' + count + '回').join(' ／ ');
+    if (['top','topTwo','last','winRate'].includes(key)) return value + '%';
+    return typeof value === 'number' ? value.toLocaleString('ja-JP') : value;
+  }
+  function table(parent, rows, fields) {
+    const wrapper = element('div');
+    wrapper.style.overflowX = 'auto';
+    const grid = element('table');
+    grid.className = 'history-table';
+    const header = grid.createTHead().insertRow();
+    for (const title of Object.values(fields)) {
+      const cell = element('th', title);
+      cell.scope = 'col';
+      header.append(cell);
+    }
+    const body = grid.createTBody();
+    for (const row of rows) {
+      const tr = body.insertRow();
+      for (const key of Object.keys(fields)) {
+        const cell = tr.insertCell();
+        cell.textContent = formatted(key, row[key]);
+        if (typeof row[key] === 'number' && row[key] < 0) cell.classList.add('negative');
+      }
+    }
+    wrapper.append(grid);
+    parent.append(wrapper);
+  }
+  function render(data) {
+    content.replaceChildren();
+    for (const [section, label] of Object.entries(rankingSections)) {
+      if (!Array.isArray(data[section])) continue;
+      const rows = data[section];
+      const fields = Object.fromEntries(Object.entries(rankingFields[section])
+        .filter(([key]) => data.options[section].includes(key) && !['trend','opponents'].includes(key)));
+      content.append(element('h2', label));
+      if (!rows.length) {
+        content.append(element('p', 'この条件の成績はまだありません。'));
+        continue;
+      }
+      if (section !== 'personal') {
+        table(content, rows, {
+          ...(Object.hasOwn(rows[0], 'rank') ? {rank:'順位'} : {}), name:'プレイヤー', ...fields,
+        });
+        if (section === 'rating' && data.options.rating.includes('trend')) {
+          for (const row of rows) {
+            if (!row.trend?.length) continue;
+            const detail = element('details');
+            detail.append(element('summary', row.name + 'のレート推移'));
+            table(detail, row.trend, {date:'対局日',rating:'レート'});
+            content.append(detail);
+          }
+        }
+      } else {
+        for (const row of rows) {
+          const detail = element('details');
+          detail.append(element('summary', row.name));
+          if (Object.keys(fields).length) table(detail, [row], fields);
+          if (Array.isArray(row.opponents)) {
+            detail.append(element('h3', '対戦相手別成績'));
+            table(detail, row.opponents, {name:'相手',rounds:'同卓数',wins:'勝',losses:'負',ties:'分',winRate:'勝率',
+              ...(Object.hasOwn(fields, 'averagePoints') ? {averagePoints:'自分の平均pt'} : {})});
+          }
+          content.append(detail);
+        }
+      }
+    }
+    if (!content.childElementCount) content.append(element('p', '公開されている成績項目はありません。'));
+  }
   async function refresh(month) {
-    period.disabled = true;
-    el('rankingRows').replaceChildren();
+    period.disabled = mode.disabled = true;
+    content.replaceChildren();
     status.textContent = '成績を読み込み中…';
     try {
-      const { data, error } = await db.rpc('get_shared_group_ranking', {
-        share_token: token, target_month: month ? month + '-01' : null,
+      const target_month = month ? month + '-01' : null;
+      let { data, error } = await db.rpc('get_shared_group_stats', {
+        share_token: token, target_month, target_mode: mode.value,
       });
+      if (error?.code === 'PGRST202') {
+        const legacy = await db.rpc('get_shared_group_ranking', {share_token: token, target_month});
+        error = legacy.error;
+        data = legacy.data && {...legacy.data, totals:legacy.data.rows, options:defaultRankingOptions};
+        mode.closest('label').hidden = true;
+      }
       if (error) throw error;
       if (!data) {
         panel.hidden = true;
@@ -36,17 +120,14 @@ async function showSharedRanking() {
       period.replaceChildren(...months.map(value =>
         new Option(value === currentMonth ? value + '（今月）' : value, value)), new Option('通算', ''));
       period.value = month;
-      for (const entry of data.rows) {
-        const row = el('rankingRows').insertRow();
-        for (const value of [entry.rank, entry.name, entry.points, entry.rounds]) row.insertCell().textContent = value;
-      }
+      render(data);
       panel.hidden = false;
-      status.textContent = data.rows.length ? '' : 'この期間の成績はまだありません。';
+      status.textContent = '';
     } catch {
       status.textContent = 'ランキングを取得できませんでした。時間をおいて開き直してください。';
-    } finally { period.disabled = false; }
+    } finally { period.disabled = mode.disabled = false; }
   }
-  period.onchange = () => refresh(period.value);
+  period.onchange = mode.onchange = () => refresh(period.value);
   await refresh(currentMonth);
 }
 showSharedRanking().catch(() => {

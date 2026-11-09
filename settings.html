@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#171b21">
 <title>卓の設定｜卓上反省会</title>
-<link rel="stylesheet" href="./sheet.css?v=ranking-share-1">
+<link rel="stylesheet" href="./sheet.css?v=ranking-options-1">
 <script defer src="./vendor/supabase-2.119.0.js"></script>
 <script defer src="./template-groups.js?v=themes-2"></script>
-<script defer src="./cloud-sheet.js?v=ranking-share-1"></script>
-<script defer src="./settings-page.js?v=history-actions-1"></script>
+<script defer src="./cloud-sheet.js?v=ranking-options-1"></script>
+<script defer src="./ranking-options.js"></script>
+<script defer src="./settings-page.js?v=ranking-options-1"></script>
 </head>
 <body><main><p><a class="back-link" href="./account.html"><span aria-hidden="true">‹</span> マイグループ</a> <a id="playLink" hidden>対局を入力</a></p>
 <p id="settingsLoadStatus" role="status">卓の設定を読み込み中…</p>
@@ -39,10 +40,12 @@
 </section>
 <section class="card" id="rankingShareSection" hidden>
   <h2>ランキングページの共有</h2>
-  <p>リンクを知っている人に、卓名と通算・月間ランキング（順位、名前、合計pt、半荘数）を公開します。</p>
+  <p>リンクを知っている人に公開する成績を選びます。</p>
   <p class="hint">個別セットの共有は履歴で管理します。</p>
+  <div id="rankingOptions" hidden></div>
   <p id="rankingShareStatus" role="status">共有状態を確認中…</p>
   <div class="buttons">
+    <button type="button" id="saveRankingOptions" hidden>公開項目を保存</button>
     <button type="button" id="enableRankingShare" hidden>共有をオンにする</button>
     <a id="previewRankingShare" class="back-link" target="_blank" rel="noopener" hidden>ページを確認</a>
     <button type="button" id="copyRankingShare" hidden>リンクをコピー</button>

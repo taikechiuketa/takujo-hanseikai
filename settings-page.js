@@ -75,15 +75,61 @@ function enableRankingShare(appearance) {
   const preview = el('previewRankingShare');
   const copy = el('copyRankingShare');
   const retry = el('retryRankingShare');
-  const controls = [enable, disable, preview, copy, retry];
+  const save = el('saveRankingOptions');
+  const form = el('rankingOptions');
+  const controls = [enable, disable, preview, copy, retry, save];
+  const sections = Object.entries(rankingFields).map(([section, fields]) => {
+    const fieldset = document.createElement('fieldset');
+    const legend = document.createElement('legend');
+    const toggle = document.createElement('input');
+    toggle.type = 'checkbox';
+    const label = document.createElement('label');
+    label.append(toggle, ' ' + rankingSections[section] + 'を公開');
+    legend.append(label);
+    fieldset.append(legend);
+    const inputs = Object.entries(fields).map(([key, title]) => {
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      const item = document.createElement('label');
+      item.style.display = 'block';
+      item.append(input, ' ' + title);
+      fieldset.append(item);
+      return [key, input];
+    });
+    function update() {
+      for (const [key, input] of inputs) {
+        const requiresRating = section === 'rating' && ['change', 'trend'].includes(key);
+        input.disabled = !toggle.checked || (requiresRating && !inputs[0][1].checked);
+      }
+    }
+    fieldset.onchange = update;
+    form.append(fieldset);
+    return { section, toggle, inputs, update };
+  });
+  function showOptions(options) {
+    for (const { section, toggle, inputs, update } of sections) {
+      toggle.checked = options[section].length > 0;
+      for (const [key, input] of inputs) input.checked = options[section].includes(key);
+      update();
+    }
+  }
+  function selectedOptions() {
+    return Object.fromEntries(sections.map(({ section, inputs }) =>
+      [section, inputs.filter(([, input]) => input.checked && !input.disabled).map(([key]) => key)]));
+  }
 
-  async function refresh(action) {
+  async function refresh(action, options) {
+    form.hidden = true;
     controls.forEach(control => { control.hidden = true; });
     preview.removeAttribute('href');
     status.textContent = '共有状態を確認中…';
     try {
-      const token = await appearance.rankingShare(action);
-      status.textContent = token ? '共有中' : '共有オフ';
+      const share = await appearance.rankingShare(action, options);
+      const token = share?.token;
+      showOptions(share?.options ?? defaultRankingOptions);
+      form.hidden = false;
+      save.hidden = !token;
+      status.textContent = token ? (action === 'save' ? '公開項目を保存しました。' : '共有中') : '共有オフ';
       enable.hidden = Boolean(token);
       if (token) {
         const url = new URL('./ranking.html', location.href);
@@ -92,7 +138,7 @@ function enableRankingShare(appearance) {
         preview.hidden = copy.hidden = disable.hidden = false;
       }
     } catch (error) {
-      status.textContent = error.code === 'PGRST205'
+      status.textContent = ['PGRST205', 'PGRST204', '42703'].includes(error.code)
         ? 'ランキング共有のDB設定が必要です。'
         : '共有状態を確認できませんでした。';
       retry.hidden = false;
@@ -100,8 +146,9 @@ function enableRankingShare(appearance) {
   }
 
   enable.onclick = () => {
-    if (confirm('卓名とランキングを、リンクを知っている人に公開しますか？')) refresh('enable');
+    if (confirm('卓名とランキングを、リンクを知っている人に公開しますか？')) refresh('enable', selectedOptions());
   };
+  save.onclick = () => refresh('save', selectedOptions());
   disable.onclick = () => {
     if (confirm('このランキングの共有リンクを無効にしますか？')) refresh('disable');
   };

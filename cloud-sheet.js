@@ -19,19 +19,23 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
     id: 'cloud:' + auth.user.id + ':' + groupId,
     name: group.name,
     settings: group.settings,
-    async rankingShare(action) {
+    async rankingShare(action, options) {
       const table = () => db.from('group_ranking_shares');
       if (action === 'enable') {
-        const { error } = await table().insert({ group_id: groupId });
+        const { error } = await table().insert({ group_id: groupId, options });
         if (error && error.code !== '23505') throw error;
+      }
+      if (action === 'save') {
+        const { error } = await table().update({ options }).eq('group_id', groupId);
+        if (error) throw error;
       }
       if (action === 'disable') {
         const { error } = await table().delete().eq('group_id', groupId);
         if (error) throw error;
       }
-      const { data, error } = await table().select('token').eq('group_id', groupId).maybeSingle();
+      const { data, error } = await table().select('token,options').eq('group_id', groupId).maybeSingle();
       if (error) throw error;
-      return data?.token ?? null;
+      return data;
     },
     async remove(name) {
       if (name !== savedName) throw new Error('現在の卓名を確認してください。');
