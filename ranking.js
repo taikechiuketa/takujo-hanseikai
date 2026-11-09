@@ -55,30 +55,6 @@ async function showSharedRanking() {
     wrapper.append(grid);
     parent.append(wrapper);
   }
-  function trendChart(parent, title, values, dates) {
-    if (values.length < 2) return;
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const figure = element('figure');
-    figure.className = 'player-trend';
-    figure.append(element('figcaption', title + '　' + formatted('', values.at(-1))));
-    const svgNode = (tag, attrs, text) => {
-      const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
-      for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
-      if (text !== undefined) node.textContent = text;
-      return node;
-    };
-    const svg = svgNode('svg', {viewBox:'0 0 324 124',role:'img','aria-label':title});
-    const path = values.map((value, i) => (52 + i * 256 / (values.length - 1)) + ',' +
-      (max === min ? 56 : 100 - (value - min) * 88 / (max - min))).join(' ');
-    svg.append(svgNode('polyline', {points:path,fill:'none',stroke:'var(--accent)','stroke-width':2.5}),
-      svgNode('text', {x:2,y:15,'font-size':10}, formatted('',max)),
-      svgNode('text', {x:2,y:104,'font-size':10}, formatted('',min)),
-      svgNode('text', {x:52,y:118,'font-size':9}, dates[0]),
-      svgNode('text', {x:308,y:118,'text-anchor':'end','font-size':9}, dates.at(-1)));
-    figure.append(svg);
-    parent.append(figure);
-  }
   function metrics(parent, values, fields) {
     const grid = element('table');
     grid.className = 'history-table';
@@ -164,10 +140,12 @@ async function showSharedRanking() {
           link.onclick = () => {
             if (hasTrend) {
               ratingTrend.replaceChildren();
-              const values = row.trend.map(point => point.rating);
-              if (row.trend[0].before != null) values.unshift(row.trend[0].before);
-              else if (values.length === 1) values.unshift(values[0]);
-              trendChart(ratingTrend, row.name + 'のR推移', values, row.trend.map(point => point.date));
+              const points = row.trend.map((point, index) => ({
+                ...point,
+                date: point.date.replaceAll('-', '/'),
+                before: point.before ?? row.trend[Math.max(0, index - 1)].rating,
+              }));
+              ratingTrend.innerHTML = rankingCharts.rating(row.name, points);
             }
             if (personalRows.length) openPersonal(data, row.name, personalRows);
           };
@@ -207,10 +185,13 @@ async function showSharedRanking() {
         const detail = element('details');
         detail.className = 'score-reference';
         detail.append(element('summary', '推移'));
-        for (const key of ['points','chips','balance']) {
+        const hint = element('p', '全ルールのセットごとの累計。選択期間の開始時点を0として表示します。');
+        hint.className = 'hint';
+        detail.append(hint);
+        for (const [key, label, unit] of [['points','ポイント','pt'], ['chips','チップ','枚'], ['balance','収支','pt']]) {
           if (!Object.hasOwn(row.progress[0], key)) continue;
-          trendChart(detail, fields[key], [0, ...row.progress.map(point => point[key])],
-            row.progress.map(point => point.date));
+          const points = row.progress.map(point => ({date:point.date.replaceAll('-', '/'),value:point[key]}));
+          detail.insertAdjacentHTML('beforeend', rankingCharts.personal(label, unit, points));
         }
         card.append(detail);
       }

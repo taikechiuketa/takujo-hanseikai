@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#171b21"><title>卓上反省会｜試作版</title><link rel="stylesheet" href="./sheet.css?v=history-actions-1"><script src="./template-groups.js?v=themes-2"></script><script src="./vendor/supabase-2.119.0.js" defer></script><script src="./cloud-sheet.js?v=save-indicator-1" defer></script></head><body><div id="saveToast" role="status" hidden></div><p id="cloudStatus" role="status" hidden></p><main id="sheetApp" hidden><div id="cloudControls" hidden><a class="back-link" href="./account.html"><span aria-hidden="true">‹</span> マイグループ</a> <button id="cloudSave" type="button" hidden>保存を再試行</button></div><header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>グループ設定の試作版 · このブラウザに保存</p></div></header>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#171b21"><title>卓上反省会｜試作版</title><link rel="stylesheet" href="./sheet.css?v=history-actions-1"><script src="./ranking-charts.js?v=1"></script><script src="./template-groups.js?v=themes-2"></script><script src="./vendor/supabase-2.119.0.js" defer></script><script src="./cloud-sheet.js?v=save-indicator-1" defer></script></head><body><div id="saveToast" role="status" hidden></div><p id="cloudStatus" role="status" hidden></p><main id="sheetApp" hidden><div id="cloudControls" hidden><a class="back-link" href="./account.html"><span aria-hidden="true">‹</span> マイグループ</a> <button id="cloudSave" type="button" hidden>保存を再試行</button></div><header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>グループ設定の試作版 · このブラウザに保存</p></div></header>
 <p id="demoSettingsNav"><a id="demoSettings" hidden>試作卓の設定</a></p>
 <section class="card" id="appearanceCard">
   <h2>対局ルール・点数表</h2>
@@ -784,11 +784,7 @@ function renderRatings(sets,matches){
   if(!rows.length){panel.textContent='対象の半荘はまだありません。';return}
   if(!player)return;
   if(!points.length){panel.textContent='選択期間に対象の半荘がありません。';return}
-  const values=[points[0].before,...points.map(p=>p.rating)];
-  const min=values.reduce((a,b)=>Math.min(a,b));
-  const max=values.reduce((a,b)=>Math.max(a,b));
-  const path=values.map((v,i)=>`${38+i*274/(values.length-1)},${max===min?56:100-(v-min)*88/(max-min)}`).join(' ');
-  panel.innerHTML=`<figure class="player-trend"><figcaption>${esc(player.name)}のR推移　${Math.round(values[0])} → ${Math.round(values.at(-1))}</figcaption><svg viewBox="0 0 324 124" role="img" aria-label="選択期間のレーティング推移"><text x="2" y="${max===min?60:15}" font-size="10">${Math.round(max)}</text>${max!==min?`<text x="2" y="104" font-size="10">${Math.round(min)}</text>`:''}<polyline points="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"/><text x="38" y="118" font-size="9">${esc(points[0].date)}</text>${points.length>1?`<text x="312" y="118" text-anchor="end" font-size="9">${esc(points.at(-1).date)}</text>`:''}</svg></figure>`;
+  panel.innerHTML=rankingCharts.rating(player.name,points);
 }
 function selectStatsView(rating){
   $('ratingPanel').hidden=!rating;
@@ -830,23 +826,7 @@ function renderPlayerTrends(sets){
     return;
   }
   $('playerStatsResults').innerHTML='<p class="hint">全ルールのセットごとの累計。選択期間の開始時点を0として表示します。</p>'+series.map(([label,unit],i)=>{
-    const values=[0,...points.map(point=>point.values[i])];
-    const min=values.reduce((a,b)=>Math.min(a,b),0);
-    const max=values.reduce((a,b)=>Math.max(a,b),0);
-    const x=index=>54+index*254/(values.length-1);
-    const y=value=>max===min?51:92-(value-min)*80/(max-min);
-    const path=values.map((value,index)=>`${x(index)},${y(value)}`).join(' ');
-    const last=values.at(-1);
-    const ticks=max===min?[0]:[max,min];
-    return `<figure class="player-trend"><figcaption>${label}　${fmt(last)} ${unit}</figcaption>
-      <svg viewBox="0 0 324 116" role="img" aria-label="${label}の累計推移">
-      <line x1="54" x2="308" y1="${y(0)}" y2="${y(0)}" stroke="#b4b4ba" stroke-dasharray="3 3"/>
-      ${ticks.map(value=>`<text x="49" y="${y(value)+3}" text-anchor="end" font-size="9" fill="#555861">${fmt(value)}</text>`).join('')}
-      <polyline points="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>
-      <circle cx="${x(values.length-1)}" cy="${y(last)}" r="3" fill="var(--accent)"/>
-      <text x="54" y="110" font-size="9" fill="#555861">${esc(points[0].date)}</text>
-      ${points.length>1?`<text x="308" y="110" text-anchor="end" font-size="9" fill="#555861">${esc(points.at(-1).date)}</text>`:''}
-      </svg></figure>`;
+    return rankingCharts.personal(label,unit,points.map(point=>({date:point.date,value:point.values[i]})));
   }).join('');
 }
 function opponentStats(sets,mode,playerId){
