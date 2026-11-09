@@ -5,7 +5,7 @@ function initTemplateGroups() {
   const id = Object.hasOwn(groups, requested) ? requested : 'demo';
   const prefix = 'mahjong-business-prototype-v1:' + id + ':';
   const settingsKey = prefix + 'settings';
-  const defaults = { name: groups[id].name, theme: 'red', rules: '', logo: '', score: null };
+  const defaults = { name: groups[id].name, theme: 'red', headerColor: '#171b21', rules: '', logo: '', score: null };
   const settings = { ...defaults, ...JSON.parse(localStorage.getItem(settingsKey) || '{}') };
   const themes = {
     red: ['紅', '#a51d3b', '#fff1f3', '#fffafb', '#fce4e9', '#e8c4cc', '#351d25'],
@@ -49,6 +49,24 @@ function initTemplateGroups() {
     document.querySelector('meta[name="theme-color"]').content = (themes[key] || themes.red)[1];
   }
 
+  function applyHeaderColor(color) {
+    const hex = /^#[0-9a-f]{6}$/i.test(color) ? color : '#171b21';
+    const [red, green, blue] = hex.slice(1).match(/../g).map(channel => {
+      const value = parseInt(channel, 16) / 255;
+      return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    });
+    const luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+    document.documentElement.style.setProperty('--header-bg', hex);
+    document.documentElement.style.setProperty('--header-text', luminance > 0.179 ? '#000' : '#fff');
+  }
+
+  const headerColor = el('headerColor');
+  headerColor.oninput = () => applyHeaderColor(headerColor.value);
+  el('resetHeaderColor').onclick = () => {
+    headerColor.value = defaults.headerColor;
+    applyHeaderColor(headerColor.value);
+  };
+
   for (const [key, [name, accent]] of Object.entries(themes)) {
     const label = document.createElement('label');
     label.className = 'theme-choice';
@@ -77,6 +95,8 @@ function initTemplateGroups() {
     el('groupRules').value = settings.rules;
     el('groupRulesPreview').textContent = settings.rules || 'ルールは未設定です。';
     applyTheme(settings.theme);
+    headerColor.value = settings.headerColor;
+    applyHeaderColor(headerColor.value);
 
     if (logoUrl) URL.revokeObjectURL(logoUrl);
     if (scoreUrl) URL.revokeObjectURL(scoreUrl);
@@ -154,7 +174,7 @@ function initTemplateGroups() {
     const submit = event.submitter;
     submit.disabled = true;
     try {
-      const next = { ...settings, name, theme: form.elements.theme.value, rules: el('groupRules').value };
+      const next = { ...settings, name, theme: form.elements.theme.value, headerColor: headerColor.value, rules: el('groupRules').value };
       const logoFile = el('groupLogoFile').files[0];
       const scoreFile = el('groupScoreFile').files[0];
       if (logoFile) {

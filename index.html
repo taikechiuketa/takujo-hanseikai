@@ -25,7 +25,7 @@
 .player-trend{margin:12px 0}
 .player-trend figcaption{font-size:14px;font-weight:650}
 .player-trend svg{display:block;width:100%;height:auto}
-.brand-header{display:flex;align-items:center;gap:14px;padding:12px 14px;background:#171b21;color:#fff;border-radius:16px;border-bottom:4px solid var(--accent)}
+.brand-header{display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--header-bg,#171b21);color:var(--header-text,#fff);border-radius:16px;border-bottom:4px solid var(--accent)}
 .brand-logo{display:block;flex:none;object-fit:contain;background:#fff;border-radius:10px}
 .brand-header h1{margin:0;font-size:clamp(30px,8vw,46px);font-weight:900;letter-spacing:.04em;line-height:1.1}
 .brand-subtitle{margin:5px 0 0;color:#e4e4e7;font-size:12px}
@@ -76,6 +76,7 @@ button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f
     <form id="groupSettings">
       <p><label>グループ名 <input id="groupName" required maxlength="60"></label></p>
       <fieldset class="theme-field"><legend>配色テーマ</legend><div id="themeChoices" class="theme-choices"></div><p class="hint">選ぶと画面にプレビューされます。「設定を保存」で確定します。</p></fieldset>
+      <p><label>ヘッダーの背景色 <input id="headerColor" type="color" value="#171b21"></label> <button type="button" class="secondary" id="resetHeaderColor">標準色に戻す</button></p>
       <div class="file-row"><strong>ロゴ画像</strong><label class="file-picker">ロゴ画像を選ぶ<input id="groupLogoFile" type="file" accept="image/png,image/jpeg,image/webp" aria-label="ロゴ画像を選ぶ"></label><span id="logoSelection" role="status"></span><label><input id="removeLogo" type="checkbox">ロゴを削除</label></div>
       <p><label>ルール本文<br><textarea id="groupRules" rows="5" maxlength="12000"></textarea></label></p>
       <div class="file-row"><strong>点数表</strong><label class="file-picker">画像・PDFを選ぶ<input id="groupScoreFile" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" aria-label="点数表の画像・PDFを選ぶ"></label><span id="scoreSelection" role="status"></span><label><input id="removeScore" type="checkbox">点数表を削除</label></div>
