@@ -88,6 +88,28 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
   };
   return {
     storage,
+    async shareSet(set, revoke) {
+      const { data, error } = await db.from('game_sets').select('id,details')
+        .eq('group_id', groupId).eq('played_on', set.date.replaceAll('/', '-'))
+        .eq('sequence', set.sequence).eq('status', 'finished').maybeSingle();
+      if (error || !data || (set.archiveId && set.archiveId !== (data.details.archiveId || data.id))) {
+        throw new Error('セットをDBに保存してから共有してください。');
+      }
+      const shares = db.from('set_shares');
+      if (revoke) {
+        const { error: deleteError } = await shares.delete().eq('set_id', data.id);
+        if (deleteError) throw new Error('リンクを無効化できませんでした。');
+        return;
+      }
+      // Unique set_id makes repeated issuance return the existing link.
+      const { error: insertError } = await shares.insert({ set_id: data.id });
+      if (insertError && insertError.code !== '23505') throw new Error('共有リンクを作成できませんでした。DB設定を確認してください。');
+      const { data: share, error: readError } = await db.from('set_shares').select('token').eq('set_id', data.id).single();
+      if (readError || !share) throw new Error('共有リンクを取得できませんでした。');
+      const url = new URL('./share.html', location.href);
+      url.hash = share.token;
+      return url.href;
+    },
     displayAppearance() { initTemplateGroups(appearance); },
     save: null,
     savePlayers: null,
