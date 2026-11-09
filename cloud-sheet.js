@@ -63,6 +63,7 @@ async function openCloudSheet(groupId, settingsOnly = false) {
     ['history', JSON.stringify(history)],
     ['players', JSON.stringify(group.sheet_players)],
   ]);
+  const serverSnapshot = JSON.stringify([...storageData]);
   const recoveryKey = 'hansei-sheet-draft:' + auth.user.id + ':' + groupId;
   let recovery;
   try { recovery = JSON.parse(localStorage.getItem(recoveryKey)); } catch {}
@@ -82,12 +83,13 @@ async function openCloudSheet(groupId, settingsOnly = false) {
   return {
     storage,
     save: null,
+    savePlayers: null,
     connect(keys) {
       initTemplateGroups(appearance);
       el('cloudControls').hidden = false;
       status.hidden = false;
       const snapshot = () => JSON.stringify([...storageData]);
-      let lastSaved = restore ? (alreadySaved ? recovery.pending.snapshot : null) : snapshot();
+      let lastSaved = restore ? (alreadySaved ? recovery.pending.snapshot : serverSnapshot) : snapshot();
       let revision = group.sheet_revision;
       let pending = sameBase ? recovery.pending : undefined;
       const button = el('cloudSave');
@@ -120,6 +122,7 @@ async function openCloudSheet(groupId, settingsOnly = false) {
           }
         };
         this.save = () => {};
+        this.savePlayers = async () => '別の画面で卓が更新されています。画面上部から下書きを退避してください。';
         return;
       }
       window.addEventListener('beforeunload', event => {
@@ -128,6 +131,33 @@ async function openCloudSheet(groupId, settingsOnly = false) {
           event.returnValue = '';
         }
       });
+
+      this.savePlayers = async () => {
+        if (button.disabled) return '別の保存が進行中です。完了後に再試行してください。';
+        if (pending) return '対局の保存結果が未確認です。画面上部から再試行してください。';
+        const players = storage.getItem(keys.master);
+        const nextRevision = crypto.randomUUID();
+        button.disabled = true;
+        try {
+          const query = db.from('groups').update({
+            sheet_players: JSON.parse(players), sheet_revision: nextRevision,
+          }).eq('id', groupId);
+          const { data, error } = await (revision === null
+            ? query.is('sheet_revision', null)
+            : query.eq('sheet_revision', revision)).select('id').maybeSingle();
+          if (error) throw error;
+          if (!data) return '別の画面で卓が更新されました。下書きを保持しています。';
+          revision = nextRevision;
+          const saved = new Map(JSON.parse(lastSaved ?? '[]'));
+          saved.set(keys.master, players);
+          lastSaved = JSON.stringify(saved);
+          keepDraft();
+          status.textContent = snapshot() === lastSaved ? 'プレイヤーマスターをDBに保存しました。' : 'プレイヤーマスターをDBに保存しました。対局には未保存の変更があります。';
+          return '';
+        } catch {
+          return 'DB保存を確認できませんでした。この端末に下書きを保持しています。';
+        } finally { button.disabled = false; }
+      };
 
       this.save = button.onclick = async () => {
         if (button.disabled) return;
