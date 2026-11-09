@@ -52,6 +52,7 @@
 #playerStatsTabs{flex-wrap:wrap}#playerStatsTabs button{flex:1 1 4.5em;white-space:nowrap;font-size:12px}
 #historyPlayer,#historyRule{width:auto;max-width:100%}
 :root{--accent:#c60027}textarea{width:min(100%,44rem)}
+#localGroupControls[hidden]{display:none}
 #groupSettings{padding:12px 0}
 .theme-field{border:1px solid var(--theme-border,#ddd);border-radius:12px;margin:12px 0}
 .theme-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px}
@@ -67,11 +68,11 @@
 :root{background:var(--theme-bg,#f3f3f5);color:var(--theme-text,#171b21)}
 .card,dialog{background:var(--theme-surface,#fff);border-color:var(--theme-border,#e4e4e7)}
 button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f5);color:var(--theme-text,#171b21)}
-</style><script src="./template-groups.js"></script><script src="./vendor/supabase-2.119.0.js" defer></script><script src="./cloud-sheet.js" defer></script></head><body><p id="cloudStatus" role="status" hidden></p><main id="sheetApp" hidden><div id="cloudControls" hidden><a href="./account.html">← グループ一覧</a> <button id="cloudSave" type="button">この卓をDBに保存</button></div><header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>グループ設定の試作版 · このブラウザに保存</p></div></header>
+</style><script src="./template-groups.js?v=cloud-settings-1"></script><script src="./vendor/supabase-2.119.0.js" defer></script><script src="./cloud-sheet.js?v=cloud-settings-1" defer></script></head><body><p id="cloudStatus" role="status" hidden></p><main id="sheetApp" hidden><div id="cloudControls" hidden><a href="./account.html">← グループ一覧</a> <button id="cloudSave" type="button">この卓をDBに保存</button></div><header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>グループ設定の試作版 · このブラウザに保存</p></div></header>
 <section class="card">
   <h2>グループ設定</h2>
-  <div class="buttons"><label>グループ <select id="groupPicker"></select></label><button type="button" id="createGroup">新しいグループ</button></div>
-  <details>
+  <div class="buttons" id="localGroupControls"><label>グループ <select id="groupPicker"></select></label><button type="button" id="createGroup">新しいグループ</button></div>
+  <details id="appearanceSettings">
     <summary>名前・配色・ルール・点数表を編集</summary>
     <form id="groupSettings">
       <p><label>グループ名 <input id="groupName" required maxlength="60"></label></p>
@@ -80,8 +81,9 @@ button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f
       <div class="file-row"><strong>ロゴ画像</strong><label class="file-picker">ロゴ画像を選ぶ<input id="groupLogoFile" type="file" accept="image/png,image/jpeg,image/webp" aria-label="ロゴ画像を選ぶ"></label><span id="logoSelection" role="status"></span><label><input id="removeLogo" type="checkbox">ロゴを削除</label></div>
       <p><label>ルール本文<br><textarea id="groupRules" rows="5" maxlength="12000"></textarea></label></p>
       <div class="file-row"><strong>点数表</strong><label class="file-picker">画像・PDFを選ぶ<input id="groupScoreFile" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" aria-label="点数表の画像・PDFを選ぶ"></label><span id="scoreSelection" role="status"></span><label><input id="removeScore" type="checkbox">点数表を削除</label></div>
+      <p id="cloudAttachmentNote" class="hint" hidden>画像・PDFはこの端末のブラウザに保存されます。</p>
       <p class="hint">PNG・JPEG・WebP（点数表はPDFも可）。各10 MBまで。選択後に設定を保存してください。</p>
-      <button>設定を保存</button> <span id="groupStatus" role="status"></span>
+      <button type="submit">設定を保存</button> <span id="groupStatus" role="status"></span>
     </form>
   </details>
   <details><summary>このグループのルール・点数表を見る</summary>

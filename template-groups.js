@@ -1,12 +1,15 @@
-function initTemplateGroups() {
+function initTemplateGroups(cloud) {
   const catalogKey = 'mahjong-business-prototype-groups-v1';
-  const groups = JSON.parse(localStorage.getItem(catalogKey) || '{"demo":{"name":"おためし卓"}}');
+  const groups = cloud ? null : JSON.parse(localStorage.getItem(catalogKey) || '{"demo":{"name":"おためし卓"}}');
   const requested = new URLSearchParams(location.search).get('group');
-  const id = Object.hasOwn(groups, requested) ? requested : 'demo';
+  const id = cloud?.id ?? (Object.hasOwn(groups, requested) ? requested : 'demo');
   const prefix = 'mahjong-business-prototype-v1:' + id + ':';
   const settingsKey = prefix + 'settings';
-  const defaults = { name: groups[id].name, theme: 'red', headerColor: '#171b21', rules: '', logo: '', score: null };
-  const settings = { ...defaults, ...JSON.parse(localStorage.getItem(settingsKey) || '{}') };
+  const defaults = { name: cloud?.name ?? groups[id].name, theme: 'red', headerColor: '#171b21', rules: '', logo: '', score: null };
+  const settings = cloud
+    ? { ...defaults, theme: cloud.settings.theme || defaults.theme,
+        headerColor: cloud.settings.headerColor || defaults.headerColor, rules: cloud.settings.rules || '' }
+    : { ...defaults, ...JSON.parse(localStorage.getItem(settingsKey) || '{}') };
   const themes = {
     red: ['紅', '#a51d3b', '#fff1f3', '#fffafb', '#fce4e9', '#e8c4cc', '#351d25'],
     blue: ['藍', '#254db6', '#eef4ff', '#fbfdff', '#dce8ff', '#bfceed', '#192e54'],
@@ -123,7 +126,7 @@ function initTemplateGroups() {
       preview.removeAttribute('src');
     }
     el('scoreSelection').textContent = settings.score?.name || '未登録';
-    el('groupPicker').replaceChildren(...Object.entries(groups).map(([key, group]) =>
+    if (!cloud) el('groupPicker').replaceChildren(...Object.entries(groups).map(([key, group]) =>
       new Option(key === id ? settings.name : group.name, key, false, key === id)
     ));
   }
@@ -153,20 +156,22 @@ function initTemplateGroups() {
     };
   }
 
-  el('groupPicker').onchange = event => openGroup(event.target.value);
-  el('createGroup').onclick = () => {
-    const name = prompt('新しいグループ名')?.trim().slice(0, 60);
-    if (!name) return;
-    const key = crypto.randomUUID();
-    try {
-      localStorage.setItem(catalogKey, JSON.stringify({ ...groups, [key]: { name } }));
-    } catch {
-      el('groupStatus').textContent = 'グループを保存できませんでした。';
-      alert('グループを保存できませんでした。');
-      return;
-    }
-    openGroup(key);
-  };
+  if (!cloud) {
+    el('groupPicker').onchange = event => openGroup(event.target.value);
+    el('createGroup').onclick = () => {
+      const name = prompt('新しいグループ名')?.trim().slice(0, 60);
+      if (!name) return;
+      const key = crypto.randomUUID();
+      try {
+        localStorage.setItem(catalogKey, JSON.stringify({ ...groups, [key]: { name } }));
+      } catch {
+        el('groupStatus').textContent = 'グループを保存できませんでした。';
+        alert('グループを保存できませんでした。');
+        return;
+      }
+      openGroup(key);
+    };
+  }
   form.onsubmit = async event => {
     event.preventDefault();
     const name = el('groupName').value.trim();
@@ -187,9 +192,15 @@ function initTemplateGroups() {
         next.score = { name: scoreFile.name, file: scoreFile };
       }
       else if (el('removeScore').checked) next.score = null;
-      await accessSettings('readwrite', records => records.put(next, id));
-      groups[id].name = name;
-      try { localStorage.setItem(catalogKey, JSON.stringify(groups)); } catch {}
+      if (cloud) {
+        await cloud.save(next);
+        Object.assign(settings, { name: next.name, theme: next.theme, headerColor: next.headerColor, rules: next.rules });
+        await accessSettings('readwrite', records => records.put({ logo: next.logo, score: next.score }, id));
+      } else {
+        await accessSettings('readwrite', records => records.put(next, id));
+        groups[id].name = name;
+        try { localStorage.setItem(catalogKey, JSON.stringify(groups)); } catch {}
+      }
       Object.assign(settings, next);
       for (const field of ['groupLogoFile', 'groupScoreFile']) el(field).value = '';
       for (const field of ['removeLogo', 'removeScore']) el(field).checked = false;
@@ -204,10 +215,13 @@ function initTemplateGroups() {
     }
   };
   render();
-  const submit = form.querySelector('button');
+  const submit = form.querySelector('button[type=submit]');
   submit.disabled = true;
   accessSettings('readonly', records => records.get(id))
-    .then(saved => { if (saved) Object.assign(settings, saved); render(); })
+    .then(saved => {
+      if (saved) Object.assign(settings, cloud ? { logo: saved.logo, score: saved.score } : saved);
+      render();
+    })
     .catch(() => { el('groupStatus').textContent = 'ブラウザのファイル保存領域を開けませんでした。'; })
     .finally(() => { submit.disabled = false; });
   return prefix;

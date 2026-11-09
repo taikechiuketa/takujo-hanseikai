@@ -8,14 +8,11 @@ async function start() {
   );
   const auth = el('auth');
   const form = el('groupForm');
-  let selected = null;
   let userId;
   let refreshVersion = 0;
 
   function resetGroup() {
-    selected = null;
     form.reset();
-    el('groupRulesField').hidden = true;
     el('groupHeading').textContent = '新しいグループ';
   }
 
@@ -29,26 +26,21 @@ async function start() {
     el('groups').hidden = !userId;
     if (!userId) return;
 
-    const { data, error } = await db.from('groups').select('id,name,settings').order('created_at');
+    const { data, error } = await db.from('groups').select('id,name').order('created_at');
     if (version !== refreshVersion) return;
     if (error) throw error;
     if (!data.length) el('groupList').append(Object.assign(document.createElement('li'), { textContent: 'グループはまだありません。' }));
     for (const group of data) {
       const item = document.createElement('li');
-      const button = document.createElement('button');
-      button.textContent = group.name;
-      button.onclick = () => {
-        selected = group;
-        el('groupHeading').textContent = 'グループ設定を編集';
-        form.elements.name.value = group.name;
-        el('groupRulesField').hidden = false;
-        form.elements.rules.value = group.settings.rules ?? '';
-      };
+      const name = document.createElement('strong');
+      name.textContent = group.name;
       const play = document.createElement('a');
       play.textContent = '対局を入力';
       play.href = './index.html?' + new URLSearchParams({ group: group.id });
-      button.textContent = group.name + 'の設定';
-      item.append(button, ' ', play);
+      const settings = document.createElement('a');
+      settings.textContent = '卓の設定';
+      settings.href = play.href + '#appearanceSettings';
+      item.append(name, ' ', play, ' / ', settings);
       el('groupList').append(item);
     }
   }
@@ -74,7 +66,6 @@ async function start() {
     finally { buttons.forEach(button => { button.disabled = false; }); }
   };
 
-  el('newGroup').onclick = resetGroup;
   el('signout').onclick = async () => {
     const { error } = await db.auth.signOut({ scope: 'local' });
     if (error) report(error);
@@ -92,10 +83,7 @@ async function start() {
     const button = event.submitter;
     button.disabled = true;
     try {
-      const query = selected
-        ? db.from('groups').update({ name, settings: { ...selected.settings, rules: form.elements.rules.value } }).eq('id', selected.id)
-        : db.from('groups').insert({ name });
-      const { error } = await query.select('id').single();
+      const { error } = await db.from('groups').insert({ name }).select('id').single();
       if (error) throw error;
       resetGroup();
       message('グループを保存しました。');

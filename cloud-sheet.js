@@ -52,11 +52,29 @@ async function openCloudSheet(groupId) {
   return {
     storage,
     connect(keys) {
-      el('groupTitle').textContent = group.name;
-      el('groupRulesPreview').textContent = group.settings.rules || 'ルールは未設定です。';
-      el('groupSettings').closest('details').hidden = true;
-      el('groupPicker').parentElement.hidden = true;
-      el('createGroup').hidden = true;
+      el('localGroupControls').hidden = true;
+      el('cloudAttachmentNote').hidden = false;
+      let savedName = group.name;
+      let savedSettings = group.settings;
+      initTemplateGroups({
+        id: 'cloud:' + auth.user.id + ':' + groupId,
+        name: group.name,
+        settings: group.settings,
+        async save(next) {
+          const settings = { ...savedSettings, theme: next.theme, headerColor: next.headerColor, rules: next.rules };
+          const { data, error } = await db.from('groups').update({ name: next.name, settings })
+            .eq('id', groupId).eq('name', savedName).eq('settings', JSON.stringify(savedSettings))
+            .select('id').maybeSingle();
+          if (error) throw new Error('卓の設定をDBに保存できませんでした。');
+          if (!data) throw new Error('卓の設定が更新されています。再読み込みしてください。');
+          savedName = next.name;
+          savedSettings = settings;
+        },
+      });
+      if (location.hash === '#appearanceSettings') {
+        el('appearanceSettings').open = true;
+        requestAnimationFrame(() => el('appearanceSettings').scrollIntoView());
+      }
       el('cloudControls').hidden = false;
       status.hidden = false;
       status.textContent = '対局の変更は「この卓をDBに保存」で確定します。';
