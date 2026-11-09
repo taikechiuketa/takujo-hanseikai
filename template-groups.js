@@ -64,6 +64,7 @@ function initTemplateGroups(cloud) {
   }
 
   const headerColor = el('headerColor');
+  if (form) {
   headerColor.oninput = () => applyHeaderColor(headerColor.value);
   el('resetHeaderColor').onclick = () => {
     headerColor.value = defaults.headerColor;
@@ -85,6 +86,8 @@ function initTemplateGroups(cloud) {
     el('themeChoices').append(label);
   }
 
+  }
+
   function openGroup(groupId) {
     const url = new URL(location.href);
     url.searchParams.set('group', groupId);
@@ -93,13 +96,15 @@ function initTemplateGroups(cloud) {
 
   function render() {
     el('groupTitle').textContent = settings.name;
-    el('groupName').value = settings.name;
-    form.elements.theme.value = settings.theme;
-    el('groupRules').value = settings.rules;
+    if (form) {
+      el('groupName').value = settings.name;
+      form.elements.theme.value = settings.theme;
+      el('groupRules').value = settings.rules;
+      headerColor.value = settings.headerColor;
+    }
     el('groupRulesPreview').textContent = settings.rules || 'ルールは未設定です。';
     applyTheme(settings.theme);
-    headerColor.value = settings.headerColor;
-    applyHeaderColor(headerColor.value);
+    applyHeaderColor(settings.headerColor);
 
     if (logoUrl) URL.revokeObjectURL(logoUrl);
     if (scoreUrl) URL.revokeObjectURL(scoreUrl);
@@ -110,7 +115,7 @@ function initTemplateGroups(cloud) {
     logo.hidden = !settings.logo;
     if (settings.logo) logo.src = logoUrl || settings.logo;
     else logo.removeAttribute('src');
-    el('logoSelection').textContent = settings.logo ? '画像を登録済み' : '未登録';
+    if (form) el('logoSelection').textContent = settings.logo ? '画像を登録済み' : '未登録';
 
     const score = el('groupScoreLink');
     const preview = el('groupScorePreview');
@@ -125,8 +130,8 @@ function initTemplateGroups(cloud) {
       score.removeAttribute('href');
       preview.removeAttribute('src');
     }
-    el('scoreSelection').textContent = settings.score?.name || '未登録';
-    if (!cloud) el('groupPicker').replaceChildren(...Object.entries(groups).map(([key, group]) =>
+    if (form) el('scoreSelection').textContent = settings.score?.name || '未登録';
+    if (!cloud && form) el('groupPicker').replaceChildren(...Object.entries(groups).map(([key, group]) =>
       new Option(key === id ? settings.name : group.name, key, false, key === id)
     ));
   }
@@ -139,7 +144,7 @@ function initTemplateGroups(cloud) {
     }
   }
 
-  for (const [field, status, allowPdf] of [
+  if (form) for (const [field, status, allowPdf] of [
     ['groupLogoFile', 'logoSelection', false],
     ['groupScoreFile', 'scoreSelection', true],
   ]) {
@@ -156,7 +161,7 @@ function initTemplateGroups(cloud) {
     };
   }
 
-  if (!cloud) {
+  if (!cloud && form) {
     el('groupPicker').onchange = event => openGroup(event.target.value);
     el('createGroup').onclick = () => {
       const name = prompt('新しいグループ名')?.trim().slice(0, 60);
@@ -172,7 +177,7 @@ function initTemplateGroups(cloud) {
       openGroup(key);
     };
   }
-  form.onsubmit = async event => {
+  if (form) form.onsubmit = async event => {
     event.preventDefault();
     const name = el('groupName').value.trim();
     if (!name) return;
@@ -215,14 +220,14 @@ function initTemplateGroups(cloud) {
     }
   };
   render();
-  const submit = form.querySelector('button[type=submit]');
-  submit.disabled = true;
+  const submit = form?.querySelector('button[type=submit]');
+  if (submit) submit.disabled = true;
   accessSettings('readonly', records => records.get(id))
     .then(saved => {
       if (saved) Object.assign(settings, cloud ? { logo: saved.logo, score: saved.score } : saved);
       render();
     })
-    .catch(() => { el('groupStatus').textContent = 'ブラウザのファイル保存領域を開けませんでした。'; })
-    .finally(() => { submit.disabled = false; });
+    .catch(() => { if (form) el('groupStatus').textContent = 'ブラウザのファイル保存領域を開けませんでした。'; })
+    .finally(() => { if (submit) submit.disabled = false; });
   return prefix;
 }

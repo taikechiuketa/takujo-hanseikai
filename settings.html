@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#171b21">
+<title>卓の設定｜卓上反省会</title>
+<link rel="stylesheet" href="./sheet.css">
+<script defer src="./vendor/supabase-2.119.0.js"></script>
+<script defer src="./template-groups.js?v=split-1"></script>
+<script defer src="./cloud-sheet.js?v=split-1"></script>
+<script defer src="./settings-page.js"></script>
+</head>
+<body><main><p><a href="./account.html">← グループ一覧</a> <a id="playLink" hidden>対局を入力</a></p>
+<p id="settingsLoadStatus" role="status">卓の設定を読み込み中…</p>
+<div id="settingsApp" hidden>
+<header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>グループ設定の試作版 · このブラウザに保存</p></div></header>
+<section class="card" id="appearanceCard">
+  <h2>卓の設定</h2>
+  <div class="buttons" id="localGroupControls" hidden><label>グループ <select id="groupPicker"></select></label><button type="button" id="createGroup">新しいグループ</button></div>
+  <details id="appearanceSettings" open>
+    <summary>名前・配色・ルール・点数表を編集</summary>
+    <form id="groupSettings">
+      <p><label>グループ名 <input id="groupName" required maxlength="60"></label></p>
+      <fieldset class="theme-field"><legend>配色テーマ</legend><div id="themeChoices" class="theme-choices"></div><p class="hint">選ぶと画面にプレビューされます。「設定を保存」で確定します。</p></fieldset>
+      <p><label>ヘッダーの背景色 <input id="headerColor" type="color" value="#171b21"></label> <button type="button" class="secondary" id="resetHeaderColor">標準色に戻す</button></p>
+      <div class="file-row"><strong>ロゴ画像</strong><label class="file-picker">ロゴ画像を選ぶ<input id="groupLogoFile" type="file" accept="image/png,image/jpeg,image/webp" aria-label="ロゴ画像を選ぶ"></label><span id="logoSelection" role="status"></span><label><input id="removeLogo" type="checkbox">ロゴを削除</label></div>
+      <p><label>ルール本文<br><textarea id="groupRules" rows="5" maxlength="12000"></textarea></label></p>
+      <div class="file-row"><strong>点数表</strong><label class="file-picker">画像・PDFを選ぶ<input id="groupScoreFile" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" aria-label="点数表の画像・PDFを選ぶ"></label><span id="scoreSelection" role="status"></span><label><input id="removeScore" type="checkbox">点数表を削除</label></div>
+      <p id="cloudAttachmentNote" class="hint" hidden>画像・PDFはこの端末のブラウザに保存されます。</p>
+      <p class="hint">PNG・JPEG・WebP（点数表はPDFも可）。各10 MBまで。選択後に設定を保存してください。</p>
+      <button type="submit">設定を保存</button> <span id="groupStatus" role="status"></span>
+    </form>
+  </details>
+  <details><summary>このグループのルール・点数表を見る</summary>
+    <p id="groupRulesPreview" style="white-space:pre-wrap;overflow-wrap:anywhere"></p>
+    <img id="groupScorePreview" alt="登録した点数表" hidden><a id="groupScoreLink" download hidden>点数表をダウンロード</a>
+  </details>
+</section>
+</div></main></body></html>

@@ -1,91 +1,7 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#171b21"><title>卓上反省会｜試作版</title><style>
-:root{font-family:system-ui,-apple-system,'Noto Sans JP',sans-serif;background:#f3f3f5;color:#171b21}*{box-sizing:border-box}body{margin:0}main{max-width:1000px;margin:auto;padding:14px 12px 50px}h1{font-size:23px;margin:6px 0 2px}h2{font-size:17px;margin:0 0 12px}.sub{font-size:12px;color:#555861}.card{background:#fff;border:1px solid #e4e4e7;border-radius:16px;padding:15px;margin:14px 0;box-shadow:0 2px 10px #171b210a}.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.buttons{display:flex;gap:8px;flex-wrap:wrap}button{border:0;border-radius:10px;background:var(--accent);color:white;padding:10px 13px;font-size:14px;font-weight:650;cursor:pointer}button.secondary{background:#f3f3f5;color:#171b21}button.danger{background:#fff0ee;color:#ae3b2c}input,select{border:1px solid #e4e4e7;border-radius:8px;padding:9px 7px;font-size:16px;min-width:0;background:#fff;color:#171b21}input:focus,select:focus{outline:2px solid #d5425e}label{font-size:12px;color:#555861;display:grid;gap:5px}.settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.settings input{width:100%}.sheet-wrap{overflow:auto;max-height:62vh;border:1px solid #e4e4e7;border-radius:12px}.sheet{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content;text-align:center;font-size:13px}.sheet th,.sheet td{padding:5px;border-right:1px solid #e4e4e7;border-bottom:1px solid #e4e4e7;min-width:84px}.sheet th{position:sticky;top:0;z-index:2;background:#f3f3f5}.sheet .first{position:sticky;left:0;z-index:3;min-width:105px;background:#f3f3f5}.sheet th.first{z-index:4;background:#e4e4e7}.sheet input.score{width:76px;text-align:center;font-weight:650;padding:10px 3px;touch-action:pan-y}.sheet .skip{width:76px;background:#e4e4e7;color:#555861;border:1px dashed #a5a5ad;border-radius:8px;min-height:43px}.sheet select{width:99px;font-size:12px;padding:7px 2px}.sheet .total td{position:sticky;bottom:0;z-index:2;background:#f3f3f5;font-weight:750}.sheet .total .first{z-index:4;background:#e4e4e7}.positive{color:#171b21}.negative{color:#c04335}.small{font-size:11px}.hint{font-size:12px;color:#555861;line-height:1.7}.pill{font-size:11px;border-radius:20px;background:#f3f3f5;color:#171b21;padding:5px 8px}.settle{width:100%;border-collapse:collapse;font-size:13px}.settle th,.settle td{padding:10px 5px;border-bottom:1px solid #e4e4e7;text-align:right}.settle th:first-child,.settle td:first-child{text-align:left}.settle input{width:70px;text-align:right}.warn{color:#ae5940;font-size:12px}.hidden{display:none}@media(min-width:600px){.settings{grid-template-columns:repeat(4,1fr)}}
-
-/* Six-player compact sheet: fit the viewport without horizontal scrolling. */
-.sheet{min-width:0;table-layout:fixed;width:100%}
-.sheet th,.sheet td{min-width:0;padding:4px 2px;overflow:hidden}
-.sheet .first{min-width:0;width:66px;left:0}
-.sheet input.score,.sheet .skip{width:100%;min-width:0;min-height:40px;padding:7px 0;font-size:14px;border-radius:5px}
-.sheet select{width:100%;font-size:10px;padding:5px 0;letter-spacing:-.5px}
-.sheet .player-name{display:block;width:100%;border:0;background:transparent;color:inherit;padding:4px 0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sheet .round-delete{padding:3px 5px;margin-top:3px;font-size:10px}
-.sheet .total td{font-size:12px;overflow-wrap:anywhere}
-@media(max-width:420px){main{padding:8px 6px 40px}.card{padding:9px;margin:10px 0}.sheet .first{width:58px}.sheet th,.sheet td{padding:3px 1px}.sheet input.score{font-size:13px}.sheet .player-name{font-size:11px}.sheet select{font-size:9px}}
-.sheet-wrap{max-height:none}
-
-.master-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #e4e4e7}.master-row .buttons button{padding:6px 9px;font-size:12px}.master-list{max-height:280px;overflow:auto}.master-row label{display:flex;align-items:center;gap:8px;font-size:14px}.master-row input[type=checkbox]{width:19px;height:19px}dialog{border:0;border-radius:16px;padding:18px;width:min(92vw,440px);box-shadow:0 12px 40px #0004}dialog::backdrop{background:#0007}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
- .remove-player{display:block;margin:0 auto;padding:0 4px;border:0;background:transparent;color:#a63b36;font-size:15px;line-height:18px;cursor:pointer}
-.navtabs{display:flex;gap:8px;margin:14px 0}.navtabs button{flex:1;padding:12px 5px}.navtabs button:not(.active){background:#f3f3f5;color:#555861}.navtabs button.active{background:var(--accent);color:white}.history-table{width:100%;border-collapse:collapse;font-size:13px}.history-table th,.history-table td{padding:9px 5px;border-bottom:1px solid #ddd;text-align:right}.history-table th:first-child,.history-table td:first-child{text-align:left}.history-table .positive{color:#171b21}.history-table .negative{color:#b23b36}.stats-filter{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}#statsTable th{white-space:nowrap}.stats-filter select{max-width:190px}.history-card{padding:12px 0;border-bottom:1px solid #ddd}.history-card summary{cursor:pointer;font-weight:650}.history-card table{width:100%;margin-top:8px;font-size:13px}
-.sheet tr.score-warning td{background:#ffe6e3;color:#932c23}
-.sheet tr.score-warning input.score,.settle.chip-warning input[data-chip]{background:#fff1ef;border-color:#ce6b60}
-#statsTable .player-stats-link,#ratingTable .player-stats-link{background:transparent;color:var(--accent);padding:4px 0;min-height:44px;font:inherit;font-weight:600;text-align:left;white-space:nowrap;text-decoration:underline;text-underline-offset:3px}
-#playerStatsDialog{height:min(680px,calc(100vh - 24px));height:min(680px,calc(100dvh - 24px));max-height:none;overflow-y:auto}
-#playerStatsTabs button{flex:1 1 0;min-width:0}
-#playerRuleTrend{font-size:12px}
-.player-trend{margin:12px 0}
-.player-trend figcaption{font-size:14px;font-weight:650}
-.player-trend svg{display:block;width:100%;height:auto}
-.brand-header{display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--header-bg,#171b21);color:var(--header-text,#fff);border-radius:16px;border-bottom:4px solid var(--accent)}
-.brand-logo{display:block;flex:none;object-fit:contain;background:#fff;border-radius:10px}
-.brand-header h1{margin:0;font-size:clamp(30px,8vw,46px);font-weight:900;letter-spacing:.04em;line-height:1.1}
-.brand-subtitle{margin:5px 0 0;color:#e4e4e7;font-size:12px}
-.sheet input.score.negative{color:var(--accent);-webkit-text-fill-color:var(--accent)}
-.score-reference{margin:0 0 12px}.score-reference summary{cursor:pointer;color:#a90022;font-weight:650;padding:8px 0}.score-reference img{display:block;width:100%;height:auto;margin-top:4px;border:1px solid #e4e4e7;border-radius:8px}
-.brand-subtitle span{display:inline-block;padding:3px 6px;margin-right:4px;background:var(--accent);color:white;border-radius:3px;font-size:9px;font-weight:800;letter-spacing:.1em}
-.round-card{padding:8px}.round-card h2{margin-bottom:3px}.round-card .score-reference{margin-bottom:4px}.round-card .score-reference summary{padding:2px 0}.round-card #addRound{padding:5px 8px;margin-bottom:4px!important}.round-card .sheet td,.round-card .sheet th{padding:0 1px}.round-card .sheet input.score,.round-card .sheet .skip{min-height:30px;padding:3px 0}.round-card .sheet .first{line-height:1.15}.round-card .sheet .first select{padding:2px 0}.round-card .sheet .round-delete{padding:1px 4px;margin-top:1px}.round-card #warnings:empty{display:none}
-.rating-scroll,.standings-scroll{overflow:auto;max-height:min(55vh,480px)}
-#statsTable,#ratingTable{border-collapse:separate;border-spacing:0}
-#statsTable thead th,#ratingTable thead th{position:sticky;top:0;z-index:2;background:#f3f3f5}
-#statsTable thead th:first-child,#ratingTable thead th:first-child{z-index:3}
-#statsTable :is(th,td):first-child,#ratingTable :is(th,td):first-child{position:sticky;left:0;z-index:1;background:#fff;white-space:nowrap;box-shadow:2px 0 0 #e4e4e7}
-#statsTable :is(th,td),#ratingTable :is(th,td){padding:3px 6px;line-height:1.25;white-space:nowrap}
-#statsTable .player-stats-link,#ratingTable .player-stats-link{min-height:28px;padding:2px 0;line-height:1.25}
-.sort-heading{background:none;color:inherit;font:inherit;padding:4px 0;white-space:nowrap}.sort-heading span{font-size:.8em;color:#a90022}
-#statsMonthLabel[hidden]{display:none}
-#statsPeriod,#statsMonth,#totalsMode,#ratingMode{width:auto;max-width:100%}
-#totalsPanel>label,#ratingPanel>label{display:inline-flex;align-items:center;gap:8px;margin:0 0 16px;line-height:1.25}
-#totalsMode,#ratingMode{width:8rem;min-width:8rem;height:38px;min-height:38px;padding:0 8px;margin:0;font-size:16px;line-height:normal}
-#totalsMode:focus,#ratingMode:focus{outline:2px solid var(--accent);outline-offset:-2px}
-#playerStatsResults .metric-value,#playerStatsResults .metric-rank{white-space:nowrap;font-variant-numeric:tabular-nums}
-#playerStatsResults .metric-rank{width:5em;text-align:right;color:#555861}
-#playerStatsResults .rank-breakdown{white-space:normal}
-#playerStatsTabs{flex-wrap:wrap}#playerStatsTabs button{flex:1 1 4.5em;white-space:nowrap;font-size:12px}
-#historyPlayer,#historyRule{width:auto;max-width:100%}
-:root{--accent:#c60027}textarea{width:min(100%,44rem)}
-#localGroupControls[hidden]{display:none}
-#groupSettings{padding:12px 0}
-.theme-field{border:1px solid var(--theme-border,#ddd);border-radius:12px;margin:12px 0}
-.theme-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px}
-.theme-choice{display:flex;align-items:center;gap:6px;padding:9px 5px;border:1px solid var(--theme-border,#ddd);border-radius:8px;cursor:pointer}
-.theme-choice:has(input:checked){outline:2px solid var(--accent)}
-.theme-dot{width:14px;height:14px;border-radius:50%;flex:none}
-.file-row{display:grid;justify-items:start;gap:6px;padding:10px 0;overflow-wrap:anywhere}
-.file-picker{position:relative;display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:9px;background:var(--accent);color:white;font-weight:650}
-.file-picker input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
-.file-picker:focus-within{outline:2px solid var(--accent);outline-offset:3px}
-#groupScorePreview{display:block;max-width:100%;max-height:560px;margin:8px 0}
-#groupScorePreview[hidden],#groupLogo[hidden],#groupScoreLink[hidden]{display:none}
-:root{background:var(--theme-bg,#f3f3f5);color:var(--theme-text,#171b21)}
-.card,dialog{background:var(--theme-surface,#fff);border-color:var(--theme-border,#e4e4e7)}
-button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f5);color:var(--theme-text,#171b21)}
-</style><script src="./template-groups.js?v=cloud-settings-1"></script><script src="./vendor/supabase-2.119.0.js" defer></script><script src="./cloud-sheet.js?v=cloud-settings-1" defer></script></head><body><p id="cloudStatus" role="status" hidden></p><main id="sheetApp" hidden><div id="cloudControls" hidden><a href="./account.html">← グループ一覧</a> <button id="cloudSave" type="button">この卓をDBに保存</button></div><header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>グループ設定の試作版 · このブラウザに保存</p></div></header>
-<section class="card">
-  <h2>グループ設定</h2>
-  <div class="buttons" id="localGroupControls"><label>グループ <select id="groupPicker"></select></label><button type="button" id="createGroup">新しいグループ</button></div>
-  <details id="appearanceSettings">
-    <summary>名前・配色・ルール・点数表を編集</summary>
-    <form id="groupSettings">
-      <p><label>グループ名 <input id="groupName" required maxlength="60"></label></p>
-      <fieldset class="theme-field"><legend>配色テーマ</legend><div id="themeChoices" class="theme-choices"></div><p class="hint">選ぶと画面にプレビューされます。「設定を保存」で確定します。</p></fieldset>
-      <p><label>ヘッダーの背景色 <input id="headerColor" type="color" value="#171b21"></label> <button type="button" class="secondary" id="resetHeaderColor">標準色に戻す</button></p>
-      <div class="file-row"><strong>ロゴ画像</strong><label class="file-picker">ロゴ画像を選ぶ<input id="groupLogoFile" type="file" accept="image/png,image/jpeg,image/webp" aria-label="ロゴ画像を選ぶ"></label><span id="logoSelection" role="status"></span><label><input id="removeLogo" type="checkbox">ロゴを削除</label></div>
-      <p><label>ルール本文<br><textarea id="groupRules" rows="5" maxlength="12000"></textarea></label></p>
-      <div class="file-row"><strong>点数表</strong><label class="file-picker">画像・PDFを選ぶ<input id="groupScoreFile" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" aria-label="点数表の画像・PDFを選ぶ"></label><span id="scoreSelection" role="status"></span><label><input id="removeScore" type="checkbox">点数表を削除</label></div>
-      <p id="cloudAttachmentNote" class="hint" hidden>画像・PDFはこの端末のブラウザに保存されます。</p>
-      <p class="hint">PNG・JPEG・WebP（点数表はPDFも可）。各10 MBまで。選択後に設定を保存してください。</p>
-      <button type="submit">設定を保存</button> <span id="groupStatus" role="status"></span>
-    </form>
-  </details>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#171b21"><title>卓上反省会｜試作版</title><link rel="stylesheet" href="./sheet.css"><script src="./template-groups.js?v=split-1"></script><script src="./vendor/supabase-2.119.0.js" defer></script><script src="./cloud-sheet.js?v=split-1" defer></script></head><body><p id="cloudStatus" role="status" hidden></p><main id="sheetApp" hidden><div id="cloudControls" hidden><a href="./account.html">← グループ一覧</a> <button id="cloudSave" type="button">この卓をDBに保存</button></div><header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>グループ設定の試作版 · このブラウザに保存</p></div></header>
+<p id="demoSettingsNav"><a id="demoSettings" hidden>試作卓の設定</a></p>
+<section class="card" id="appearanceCard">
+  <h2>対局ルール・点数表</h2>
   <details><summary>このグループのルール・点数表を見る</summary>
     <p id="groupRulesPreview" style="white-space:pre-wrap;overflow-wrap:anywhere"></p>
     <img id="groupScorePreview" alt="登録した点数表" hidden><a id="groupScoreLink" download hidden>点数表をダウンロード</a>
@@ -98,9 +14,14 @@ button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f
 <section class="card"><div class="row"><div><h2>データ管理</h2><p class="hint">現在のセットをJSONファイルに書き出し、バックアップや別のブラウザへの移行に使えます。読み込むと現在のセットが置き換わります。プレイヤーマスターとセット履歴は対象外です。</p></div><div class="buttons"><button class="secondary" id="export">JSON保存</button><button class="secondary" id="import">JSON読込</button><input class="hidden" type="file" id="file" accept="application/json,.json"></div></div><hr><p class="hint">全データには入力中のセット・セット履歴・プレイヤーマスターが含まれます。</p><div class="buttons"><button class="secondary" id="backupAll">全データをバックアップ</button><button class="secondary" id="restoreAll">バックアップから復元</button><input class="hidden" type="file" id="backupFile" accept="application/json,.json"></div></section>
 </div><div id="statsPage" hidden><section class="card"><h2>通算成績</h2><div class="buttons"><button type="button" class="secondary" id="exportPublicStats">公開用の成績を書き出す</button><a href="./results.html">閲覧専用ページ</a></div><p class="hint">累計ポイントの高い順。混在セットのチップとその収支は「すべて」に含まれます。</p><div class="stats-filter"><label>集計期間 <select id="statsPeriod"><option value="month">今月</option><option value="previous">前月</option><option value="monthly">月間ランキング</option><option value="year">今年</option><option value="all" selected>全期間</option><option value="range">範囲指定</option></select></label><label id="statsMonthLabel" hidden>対象月 <select id="statsMonth"></select></label><span id="statsRange" hidden><label>開始日 <input type="date" id="statsFrom"></label> <label>終了日 <input type="date" id="statsTo"></label></span></div><div class="navtabs" aria-label="成績表示"><button id="showTotals" class="active" aria-pressed="true">通算成績</button><button id="showRating" aria-pressed="false">レーティング</button></div><div id="ratingPanel" hidden><label>ルール <select id="ratingMode"><option value="all">すべて</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label><p class="hint">全期間の現在R。「すべて」は全ルールの半荘から計算する総合Rです。20半荘未満は暫定です。名前をタップすると個人成績が開き、表の下には選択期間のR推移が表示されます。</p><div class="rating-scroll"><table id="ratingTable" class="history-table"></table></div><div id="ratingTrend"></div></div><div id="totalsPanel" class="standings-scroll"><label>ルール <select id="totalsMode"><option value="all">すべて</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label><table id="statsTable" class="history-table"></table></div><p id="statsNote" class="hint"></p></section><section class="card"><h2>セット履歴</h2><button class="secondary" id="importHistory">雀簿データを追加</button><div class="stats-filter"><label>対局者 <select id="historyPlayer"><option value="">すべて</option></select></label><label>ルール <select id="historyRule"><option value="">すべて</option><option value="normal">三人麻雀</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label></div><div id="historyList"></div></section></div></main><dialog id="masterDialog"><h2 id="masterHeading">プレイヤーを追加</h2><div class="master-list" id="masterList"></div><div class="row" style="margin-top:12px"><input id="newMasterName" placeholder="新しいプレイヤー名" style="flex:1;width:160px"><button id="createMaster">＋ 登録</button></div><div class="modal-actions"><button class="secondary" id="closeMaster">閉じる</button><button id="applyMaster">選択した人を追加</button></div></dialog><dialog id="importHistoryDialog"><h2>雀簿データを追加</h2><label for="historyText">共有ページからコピーした文字、または移行用JSON</label><label>取り込みルール <select id="importRule"><option value="">自動判定（4人打ちは四人三麻）</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label><textarea id="historyText" rows="8" style="width:100%;margin-top:8px"></textarea><div class="modal-actions"><button class="secondary" id="closeHistoryImport">閉じる</button><button id="previewHistoryImport">内容を確認</button></div></dialog><dialog id="playerStatsDialog" aria-labelledby="playerStatsTitle"><h2 id="playerStatsTitle"></h2><p class="hint" id="playerStatsPeriod"></p><div class="navtabs" id="playerStatsTabs" role="tablist" aria-label="ルール"><button type="button" id="playerRuleAll" role="tab" aria-controls="playerStatsResults" data-mode="all">すべて</button><button type="button" id="playerRuleNormal" role="tab" aria-controls="playerStatsResults" data-mode="normal">三麻</button><button type="button" id="playerRuleNorth" role="tab" aria-controls="playerStatsResults" data-mode="north">四人三麻</button><button type="button" id="playerRuleYonma" role="tab" aria-controls="playerStatsResults" data-mode="yonma">四人麻雀</button><button type="button" id="playerRuleTrend" role="tab" aria-controls="playerStatsResults" data-mode="trend">推移グラフ</button></div><div id="playerStatsResults" role="tabpanel"></div><p class="hint" id="playerStatsIncomplete" hidden></p><p class="hint" id="playerStatsChipsNote" hidden>混在セットのチップとその収支は「すべて」で集計します。</p><p class="hint" id="playerRankHint">着順は必要人数の点数がそろった半荘で集計。同点は同順位です。抜け番は対局数に含みません。</p><form method="dialog" class="modal-actions"><button class="secondary">閉じる</button></form></dialog><script>
 document.addEventListener('DOMContentLoaded', async () => {
-const cloudId=new URLSearchParams(location.search).get('group');
+const pageParams=new URLSearchParams(location.search);
+const cloudId=pageParams.has('local')?null:pageParams.get('group');
 let cloud;
 if(cloudId){
+  if(location.hash==='#appearanceSettings'){
+    location.replace('./settings.html'+location.search);
+    return;
+  }
   try{cloud=await openCloudSheet(cloudId)}catch(error){
     const status=document.getElementById('cloudStatus');
     status.hidden=false;
@@ -113,6 +34,11 @@ if(cloudId){
   }
 }
 const groupPrefix=cloud?'':initTemplateGroups();
+if(!cloud){
+  const demoSettings=document.getElementById('demoSettings');
+  demoSettings.href='./settings.html?local=1'+(pageParams.get('group')?'&'+new URLSearchParams({group:pageParams.get('group')}):'');
+  demoSettings.hidden=false;
+}
 const storage=cloud?.storage||window.localStorage;
 const MASTER_KEY=groupPrefix+'players';let master=[];try{master=JSON.parse(storage.getItem(MASTER_KEY))||[]}catch{};if(!Array.isArray(master))master=[];const saveMaster=()=>storage.setItem(MASTER_KEY,JSON.stringify(master));const KEY=groupPrefix+'current';const ARCHIVE_KEY=groupPrefix+'history';const today=()=>{const d=new Date();return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`};const archives=()=>{try{return JSON.parse(storage.getItem(ARCHIVE_KEY))||[]}catch{return []}};const nextSequence=()=>{const d=today();const used=archives().filter(x=>x.date===d).map(x=>Number(x.sequence)||0);return Math.max(0,...used)+1};const modes=[['normal','三麻'],['north','四人三麻'],['yonma','四人麻雀']];const fresh=(start=false)=>({idle:!start,date:start?today():'',sequence:start?nextSequence():0,rate:100,chipRate:100,players:[],rounds:[]});let editing=null;let state;try{state=JSON.parse(storage.getItem(KEY))||fresh()}catch{state=fresh()}if(!state.players||!state.rounds)state=fresh();if(state.rounds.length===1&&state.rounds[0].id==='r1'&&state.players.length===3&&state.players.every((p,i)=>p.id==='p'+(i+1)&&p.name===['たけち','Aさん','Bさん'][i]&&!p.chips)&&Object.values(state.rounds[0].scores).every(score=>score==='')){
   const used=new Set(archives().flatMap(set=>set.players.map(p=>p.masterId)));

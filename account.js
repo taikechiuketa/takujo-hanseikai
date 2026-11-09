@@ -39,7 +39,7 @@ async function start() {
       play.href = './index.html?' + new URLSearchParams({ group: group.id });
       const settings = document.createElement('a');
       settings.textContent = '卓の設定';
-      settings.href = play.href + '#appearanceSettings';
+      settings.href = './settings.html?' + new URLSearchParams({ group: group.id });
       item.append(name, ' ', play, ' / ', settings);
       el('groupList').append(item);
     }
