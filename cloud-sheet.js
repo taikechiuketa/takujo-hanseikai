@@ -39,16 +39,26 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
   if (settingsOnly) return appearance;
 
   const history = [];
+  const sharing = new Map();
+  const shareKey = set => set.archiveId || JSON.stringify([set.date, set.sequence]);
   for (let offset = 0; ; offset += 100) {
     const { data, error: loadError } = await db.from('game_sets')
       .select('id,played_on,sequence,details,rounds(position,mode,scores)')
       .eq('group_id', groupId).order('played_on').order('sequence').range(offset, offset + 99);
     if (loadError) throw new Error('対局履歴を読み込めませんでした。');
+    let sharedIds;
+    if (!readOnly && data.length) {
+      const { data: shares, error: shareError } = await db.from('set_shares')
+        .select('set_id').in('set_id', data.map(set => set.id));
+      if (!shareError) sharedIds = new Set(shares.map(share => share.set_id));
+    }
     for (const set of data) {
       const players = (set.details.players || []).map((player, i) =>
         typeof player === 'string' ? { id: String(i), name: player, chips: '' } : player);
+      const archiveId = set.details.archiveId || set.id;
+      if (sharedIds) sharing.set(archiveId, sharedIds.has(set.id));
       history.push({
-        ...set.details, archiveId: set.details.archiveId || set.id, players,
+        ...set.details, archiveId, players,
         date: set.played_on.replaceAll('-', '/'), sequence: set.sequence,
         rounds: set.rounds.sort((a, b) => a.position - b.position).map(round => ({
           id: String(round.position), mode: round.mode, scores: round.scores,
@@ -69,6 +79,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
     ['history', JSON.stringify(history)],
     ['players', JSON.stringify(group.sheet_players)],
   ]);
+  const knownSets = new Set(history.map(shareKey));
   const serverSnapshot = JSON.stringify([...storageData]);
   const recoveryKey = 'hansei-sheet-draft:' + auth.user.id + ':' + groupId;
   let recovery;
@@ -88,6 +99,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
   };
   return {
     storage,
+    isShared: set => sharing.get(shareKey(set)),
     async shareSet(set, revoke) {
       const { data, error } = await db.from('game_sets').select('id,details')
         .eq('group_id', groupId).eq('played_on', set.date.replaceAll('/', '-'))
@@ -99,14 +111,22 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
       if (revoke) {
         const { error: deleteError } = await shares.delete().eq('set_id', data.id);
         if (deleteError) throw new Error('リンクを無効化できませんでした。');
+        sharing.set(shareKey(set), false);
         return;
       }
-      // Unique set_id makes repeated issuance return the existing link.
-      const { error: insertError } = await shares.insert({ set_id: data.id });
-      if (insertError && insertError.code !== '23505') throw new Error('共有リンクを作成できませんでした。DB設定を確認してください。');
-      const { data: share, error: readError } = await db.from('set_shares').select('token').eq('set_id', data.id).single();
-      if (readError || !share) throw new Error('共有リンクを取得できませんでした。');
+      if (sharing.get(shareKey(set)) !== true) {
+        // A copy action must never re-enable a link revoked in another session.
+        const { error: insertError } = await shares.insert({ set_id: data.id });
+        if (insertError && insertError.code !== '23505') throw new Error('共有リンクを作成できませんでした。DB設定を確認してください。');
+      }
+      const { data: share, error: readError } = await db.from('set_shares').select('token').eq('set_id', data.id).maybeSingle();
+      if (readError) throw new Error('共有リンクを取得できませんでした。');
+      if (!share) {
+        sharing.set(shareKey(set), false);
+        throw new Error('共有リンクは無効になっています。必要なら改めて発行してください。');
+      }
       const url = new URL('./share.html', location.href);
+      sharing.set(shareKey(set), true);
       url.hash = share.token;
       return url.href;
     },
@@ -246,6 +266,11 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
             return;
           }
           revision = data;
+          for (const set of pending.payload.sets) {
+            const key = shareKey(set);
+            if (!knownSets.has(key) && set.archiveId && !sharing.has(key)) sharing.set(key, false);
+            knownSets.add(key);
+          }
           lastSaved = pending.snapshot;
           pending = undefined;
           keepDraft();

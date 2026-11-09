@@ -82,3 +82,5 @@ button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f
 .back-link span{font-size:1.45rem;line-height:1;color:var(--accent)}
 .back-link:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 #cloudControls:not([hidden]){margin-bottom:.75rem}
+
+.share-state.is-shared{background:#d9f2e5;color:#155137}
