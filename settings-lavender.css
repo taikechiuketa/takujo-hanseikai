@@ -1,0 +1,9 @@
+.lavender-settings{background:#f5f2fc;color:#231c38;color-scheme:light;min-height:100vh}
+.lavender-settings .card{background:#fff;color:#231c38;border-color:#e5def2;border-radius:20px;box-shadow:0 10px 30px #39246e0b}
+.lavender-settings :is(label,.hint){color:#655d78}
+.lavender-settings :is(input,textarea,select){background:#fff;color:#231c38;border-color:#cfc4e4;accent-color:#5436ba}
+.lavender-settings :is(button,.file-picker){border-radius:12px}
+.lavender-settings button:not(.secondary,.danger,.theme-choice){background:#5436ba;color:#fff}
+.lavender-settings :is(button.secondary,.file-picker,.back-link){background:#ece5fb;color:#423563;border-color:#e5def2}
+.lavender-settings :is(a,button,input,textarea,select,summary):focus-visible{outline:3px solid #7754d6;outline-offset:2px}
+.lavender-settings .brand-header{border-bottom-color:#c6b1f8;border-radius:20px}

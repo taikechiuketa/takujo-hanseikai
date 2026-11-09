@@ -50,7 +50,14 @@ async function start() {
       const actions = document.createElement('div');
       actions.className = 'table-actions';
       actions.append(play, settings);
-      item.append(name, actions);
+      const identity = document.createElement('div');
+      identity.className = 'table-identity';
+      const icon = document.createElement('span');
+      icon.className = 'table-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = Array.from(group.name.trim())[0] || '卓';
+      identity.append(icon, name);
+      item.append(identity, actions);
       el('groupList').append(item);
     }
   }

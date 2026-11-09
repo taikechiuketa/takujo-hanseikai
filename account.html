@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>卓上反省会｜グループ管理</title>
-<link rel="stylesheet" href="./account.css">
+<link rel="stylesheet" href="./account.css?v=lavender-1">
 <main>
 <header class="masthead">
 <div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -11,10 +11,16 @@
 </header>
 <p id="status" role="status" aria-live="polite"></p>
 <section id="login" hidden>
+<div class="welcome-intro">
+<div class="welcome-tiles" aria-hidden="true"><span>一</span><span>中</span></div>
+<p class="eyebrow">卓上反省会</p>
+<h2>いつものメンツの、<br>麻雀成績帳。</h2>
+<p class="muted">半荘のスコアも、あとから見返す成績も。仲間との対局をひとつの卓に。</p>
+</div>
+<form id="auth">
 <p class="eyebrow">WELCOME</p>
 <h2>ログイン</h2>
 <p class="muted">ログインすると、自分の卓の対局と成績を確認できます。</p>
-<form id="auth">
 <label>メールアドレス<input name="email" type="email" autocomplete="email" required></label>
 <label>パスワード<input name="password" type="password" autocomplete="current-password" required></label>
 <button name="action" value="login">ログイン</button>
@@ -33,5 +39,5 @@
 </section>
 </main>
 <script src="./vendor/supabase-2.119.0.js"></script>
-<script type="module" src="./account.js?v=history-actions-1"></script>
+<script type="module" src="./account.js?v=lavender-1"></script>
 </html>
