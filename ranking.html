@@ -8,23 +8,22 @@
 <link rel="stylesheet" href="./sheet.css">
 <script defer src="./vendor/supabase-2.119.0.js"></script>
 <script defer src="./ranking-options.js"></script>
-<link rel="stylesheet" href="./ranking.css?v=ranking-context-1">
-<script defer src="./ranking.js?v=ranking-context-1"></script>
+<script defer src="./ranking.js?v=admin-layout-1"></script>
 </head>
-<body class="public-ranking"><main>
+<body><main>
 <header class="brand-header"><div><h1 id="rankingTitle">卓上反省会</h1><p>卓上反省会 ／ 公開成績</p></div></header>
 <p id="rankingStatus" role="status">成績を読み込み中…</p>
-<section id="rankingPanel" hidden>
-<div class="ranking-filters">
+<section id="rankingPanel" class="card" hidden>
+<div class="stats-filter">
 <label>集計期間 <select id="rankingPeriod"></select></label>
 <label>ルール <select id="rankingMode"><option value="all">すべて</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四麻</option></select></label>
 </div>
-<nav id="rankingNavigation" aria-label="成績の種類"></nav>
+<nav id="rankingNavigation" class="navtabs" aria-label="成績の種類"></nav>
 <div id="rankingContent"></div>
 </section>
-<dialog id="rankingPlayerDialog" aria-labelledby="rankingPlayerTitle">
+<dialog id="playerStatsDialog" aria-labelledby="playerStatsTitle">
 <form method="dialog"><button type="submit" class="secondary">閉じる</button></form>
-<h2 id="rankingPlayerTitle"></h2>
-<div id="rankingPlayerContent"></div>
+<h2 id="playerStatsTitle"></h2>
+<div id="playerStatsResults"></div>
 </dialog>
 </main></body></html>
