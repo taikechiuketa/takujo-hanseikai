@@ -58,7 +58,9 @@ async function loadSharedSet() {
       ...data.players.map((_, i) => scoreAt(round, i) ?? '—'),
     ]);
   });
-  el('shareTitle').textContent = data.group + 'のセット結果';
+  document.title = data.group + '｜セット結果';
+  el('shareGroup').textContent = data.group;
+  el('shareTitle').textContent = 'セット結果';
   el('shareDate').textContent = data.date.replaceAll('-', '/') + ' ・ 伝票 ' + data.sequence;
   el('shareRates').textContent = ratesAvailable
     ? 'ポイント倍率 ' + rate + ' ／ チップレート ' + chipRate + ' pt/枚'
