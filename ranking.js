@@ -87,6 +87,10 @@ async function showSharedRanking() {
     navigation.append(...buttons);
     renderSection(data, activeSection);
   }
+  function filterCaption() {
+    return [period.selectedOptions[0]?.textContent, mode.closest('label').hidden ? '' : mode.selectedOptions[0]?.textContent]
+      .filter(Boolean).join(' ・ ');
+  }
   function renderSection(data, section) {
     content.replaceChildren();
     if (!section) {
@@ -99,7 +103,9 @@ async function showSharedRanking() {
       .filter(([key]) => selected.includes(key) && !['trend','opponents'].includes(key)));
     const heading = element('h2', rankingSections[section]);
     heading.className = 'ranking-heading';
-    content.append(heading);
+    const caption = element('p', filterCaption());
+    caption.className = 'ranking-context';
+    content.append(heading, caption);
     if (!rows.length) {
       content.append(element('p', 'この条件の成績はまだありません。'));
       return;
@@ -120,6 +126,10 @@ async function showSharedRanking() {
         const link = element('button', row.name);
         link.type = 'button';
         link.className = 'ranking-player-link';
+        link.setAttribute('aria-label', row.name + 'の個人成績を開く');
+        const arrow = element('span', '›');
+        arrow.setAttribute('aria-hidden', 'true');
+        link.append(arrow);
         link.onclick = () => openPersonal(data, row.name, personalRows);
         title.append(link);
       } else {
@@ -155,7 +165,9 @@ async function showSharedRanking() {
     const dialog = el('rankingPlayerDialog');
     const body = el('rankingPlayerContent');
     el('rankingPlayerTitle').textContent = name + 'の個人成績';
-    body.replaceChildren();
+    const caption = element('p', filterCaption());
+    caption.className = 'ranking-context';
+    body.replaceChildren(caption);
     if (rows.length > 1) body.append(element('p', '同じ表示名の選手が複数います。'));
     const fields = Object.fromEntries(Object.entries(rankingFields.personal)
       .filter(([key]) => data.options.personal.includes(key) && key !== 'opponents'));

@@ -162,6 +162,14 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
       this.hasUnsavedPlayers = () => Boolean(conflict) ||
         new Map(JSON.parse(lastSaved)).get(keys.master) !== storage.getItem(keys.master);
       let pending = sameBase ? recovery.pending : undefined;
+      const indicator = el('setSaveIndicator');
+      const showSetStatus = message => {
+        if (!indicator) return;
+        indicator.hidden = false;
+        indicator.textContent = message;
+      };
+      showSetStatus(conflict ? '保存できません。画面上部を確認してください。'
+        : pending ? '保存結果を確認できていません。' : snapshot() === lastSaved ? 'DB保存済み' : '未保存の変更があります。');
       const button = el('cloudSave');
       function keepDraft() {
         try {
@@ -171,7 +179,13 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
         } catch { return false; }
       }
       changed = () => {
-        if (!conflict) status.textContent = keepDraft() ? '未保存の変更があります。' : '未保存です。この端末に下書きを残せませんでした。';
+        if (conflict) return;
+        const retained = keepDraft();
+        status.textContent = retained ? '未保存の変更があります。' : '未保存です。この端末に下書きを残せませんでした。';
+        if (!button.disabled || !pending) {
+          showSetStatus(pending ? '保存結果を確認できていません。'
+            : snapshot() === lastSaved ? 'DB保存済み' : status.textContent);
+        }
       };
       status.textContent = restore ? 'この端末の下書きを復元しました。' : '';
       button.hidden = !pending;
@@ -239,6 +253,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
           lastSaved = JSON.stringify(saved);
           keepDraft();
           status.textContent = snapshot() === lastSaved ? 'プレイヤーマスターをDBに保存しました。' : 'プレイヤーマスターをDBに保存しました。対局には未保存の変更があります。';
+          if (!pending) showSetStatus(snapshot() === lastSaved ? 'DB保存済み' : '未保存の変更があります。');
           return '';
         } catch {
           return 'DB保存を確認できませんでした。この端末に下書きを保持しています。';
@@ -252,6 +267,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
           const sets = JSON.parse(storage.getItem(keys.history)) || [];
           if (!draft || sets.some(set => !set.date || !set.sequence)) {
             status.textContent = '保存する対局の日付・伝票番号を確認してください。';
+            showSetStatus(status.textContent);
             return;
           }
           pending = {
@@ -266,6 +282,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
         button.disabled = true;
         button.hidden = true;
         status.textContent = '保存中…';
+        showSetStatus(status.textContent);
         try {
           const { data, error: saveError } = await db.rpc('save_sheet_workspace', pending.payload);
           if (saveError) {
@@ -273,13 +290,15 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
               pending = undefined;
               keepDraft();
               status.textContent = '別の画面から更新されています。入力内容をJSONで退避し、再読み込みしてください。';
-            keys.notify(status.textContent);
+              showSetStatus(status.textContent);
+              keys.notify(status.textContent);
               return;
             }
             if (saveError.code !== 'FETCH_ERROR' && saveError.code) pending = undefined;
             keepDraft();
             button.hidden = false;
             status.textContent = '保存できませんでした。入力を確認して再試行してください。';
+            showSetStatus(status.textContent);
             keys.notify(status.textContent);
             return;
           }
@@ -294,12 +313,14 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
           keepDraft();
           button.hidden = snapshot() === lastSaved;
           status.textContent = button.hidden ? 'DBに保存しました。' : '先ほどの保存は完了しました。残りの変更を保存してください。';
+          showSetStatus(button.hidden ? 'DB保存済み' : '未保存の変更があります。');
           keys.notify(status.textContent);
           keys.onSaved();
         } catch {
           button.hidden = false;
           status.textContent = '保存結果を確認できませんでした。再試行してください。';
-            keys.notify(status.textContent);
+          showSetStatus(status.textContent);
+          keys.notify(status.textContent);
         } finally { button.disabled = false; }
       };
     },

@@ -27,3 +27,6 @@
 #rankingPlayerDialog::backdrop{background:#142e2980}
 #rankingPlayerDialog form{display:flex;justify-content:flex-end}
 #rankingPlayerContent{display:grid;gap:8px}
+.ranking-context{margin:0 0 10px;color:#46615a;font-size:13px}
+.ranking-player .ranking-player-link{display:flex;flex:1;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.ranking-player-link span{font-size:22px;text-decoration:none}
