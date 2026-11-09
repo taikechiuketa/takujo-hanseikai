@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>卓上反省会｜対局入力</title>
+<style>
+*{box-sizing:border-box}body{font:1rem system-ui,sans-serif;background:#eef2f7;color:#182337;margin:0}main{max-width:42rem;margin:auto;padding:1rem}section{background:white;border-radius:1rem;padding:1rem;margin:1rem 0}label[hidden]{display:none}label{display:block;margin:.7rem 0}input,select,textarea,button{font:inherit;padding:.6rem;border:1px solid #8492a5;border-radius:.4rem}input,textarea{width:100%}button{background:#254db6;color:white;cursor:pointer;margin:.25rem}li{margin:.5rem 0}button:disabled{opacity:.6}
+</style>
+<main>
+<a href="./account.html">← グループ一覧</a>
+<h1 id="title">対局入力</h1>
+<p id="status" role="status" aria-live="polite">読み込み中…</p>
+<section id="entry" hidden>
+<h2>セットを記録</h2>
+<form id="gameForm">
+<label>対局日<input name="date" type="date" required></label>
+<fieldset><legend>プレイヤー</legend>
+<p>三麻では、各半荘で参加しなかった人の点数欄を空けてください。</p>
+<div id="players"></div></fieldset>
+<div id="rounds"></div>
+<button type="button" id="addRound">半荘を追加</button>
+<button type="submit">セットを保存</button>
+</form>
+</section>
+<section id="historySection" hidden><h2>セット履歴</h2><div id="history"></div></section>
+</main>
+<script src="./vendor/supabase-2.119.0.js"></script>
+<script type="module" src="./game.js"></script>
+</html>

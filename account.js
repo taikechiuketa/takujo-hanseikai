@@ -44,7 +44,11 @@ async function start() {
         el('groupRulesField').hidden = false;
         form.elements.rules.value = group.settings.rules ?? '';
       };
-      item.append(button);
+      const play = document.createElement('a');
+      play.textContent = '対局を入力';
+      play.href = './game.html?' + new URLSearchParams({ group: group.id });
+      button.textContent = group.name + 'の設定';
+      item.append(button, ' ', play);
       el('groupList').append(item);
     }
   }
