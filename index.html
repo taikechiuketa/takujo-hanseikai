@@ -642,7 +642,7 @@ function renderStats(){
     const ranked=r.ranks.reduce((sum,n)=>sum+n,0);
     const percent=n=>ranked?(100*n/ranked).toFixed(1)+'%':'—';
     const cells=[fmt(r.pt)+' pt',fmt(r.yen)+' pt',r.sets,r.rounds,fmt(r.chips),percent(r.ranks[0]),percent(r.lasts),...r.ranks.slice(0,rankCount)];
-    return `<tr><td><button class="player-stats-link" data-player-stats="${esc(r.id)}">${esc(r.name)}</button></td>${cells.map((v,i)=>`<td class="${i<2&&v.startsWith('-')?'negative':''}">${v}</td>`).join('')}</tr>`;
+    return `<tr><td><button class="player-stats-link" data-player-stats="${esc(r.id)}">${esc(r.name)}</button></td>${cells.map((v,i)=>`<td class="${(i<2||i===4)&&String(v).startsWith('-')?'negative':''}">${v}</td>`).join('')}</tr>`;
   }).join('')+'</tbody>';
   bindTableSort('statsTable');
   $('exportPublicStats').hidden=readOnly||!$('ratingPanel').hidden;
@@ -952,7 +952,7 @@ function renderPlayerStats(){
     ['着順内訳',totals.ranks.slice(0,mode==='normal'?3:4).map((n,i)=>`${i+1}着 ${n}回`).join(' ／ ')]
   );
   $('playerStatsResults').innerHTML='<table class="history-table"><tbody>'+metrics.map(([label,result,metric,ascending])=>
-    `<tr><th scope="row">${label}</th>${metric?`<td class="metric-value">${result}</td><td class="metric-rank">${placement(metric,ascending)}</td>`:`<td class="rank-breakdown" colspan="2">${result}</td>`}</tr>`).join('')+'</tbody></table>'+renderOpponentStats(sets,mode);
+    `<tr><th scope="row">${label}</th>${metric?`<td class="metric-value${String(result).startsWith('-')?' negative':''}">${result}</td><td class="metric-rank">${placement(metric,ascending)}</td>`:`<td class="rank-breakdown" colspan="2">${result}</td>`}</tr>`).join('')+'</tbody></table>'+renderOpponentStats(sets,mode);
 }
 $('statsTable').onclick=e=>{
   const button=e.target.closest('[data-player-stats]');

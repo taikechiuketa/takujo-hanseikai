@@ -42,7 +42,7 @@ async function start() {
       const play = document.createElement('a');
       play.className = 'primary-link';
       play.textContent = '対局を入力';
-      play.href = './index.html?' + new URLSearchParams({ group: group.id, ui: 'entry-flow-2' });
+      play.href = './index.html?' + new URLSearchParams({ group: group.id, ui: 'entry-flow-3' });
       const settings = document.createElement('a');
       settings.className = 'secondary-link';
       settings.textContent = '卓の設定';
