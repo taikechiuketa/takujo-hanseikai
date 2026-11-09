@@ -14,7 +14,7 @@ async function showSettingsPage() {
       enableRankingShare(appearance);
     }
     const playLink = document.getElementById('playLink');
-    params.set('ui', 'entry-flow-3');
+    params.set('ui', 'history-actions-1');
     playLink.href = './index.html?' + params;
     playLink.hidden = false;
     document.getElementById('settingsApp').hidden = false;

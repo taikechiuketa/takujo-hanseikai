@@ -99,3 +99,7 @@ button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f
 .sheet.settle th,.sheet.settle td{padding:5px;text-align:center}
 .sheet.settle tbody th{top:auto}
 .sheet.settle input{width:100%;max-width:76px;text-align:center}
+
+.history-actions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.history-actions button{min-height:44px;padding:6px 8px;font-size:12px;white-space:nowrap}
+.history-actions .history-share{display:inline-flex;align-items:center;gap:4px;background:transparent;color:var(--accent);border:1px solid currentColor}
