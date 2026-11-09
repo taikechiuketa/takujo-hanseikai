@@ -22,3 +22,8 @@
 .ranking-metrics dd{margin:3px 0 0;font-size:15px;font-weight:650;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .ranking-player details{margin-top:12px;border-top:1px solid #d6e1dd}
 .ranking-player summary{cursor:pointer;padding:12px 0;color:#155345;font-weight:650}
+.ranking-player .ranking-player-link{padding:4px 0;min-height:44px;color:#155345;background:transparent;text-align:left;text-decoration:underline;font:inherit;overflow-wrap:anywhere}
+#rankingPlayerDialog{width:min(560px,calc(100% - 24px));max-height:85vh;border:1px solid #d6e1dd;border-radius:16px;background:#fff;color:#182b27;padding:16px}
+#rankingPlayerDialog::backdrop{background:#142e2980}
+#rankingPlayerDialog form{display:flex;justify-content:flex-end}
+#rankingPlayerContent{display:grid;gap:8px}

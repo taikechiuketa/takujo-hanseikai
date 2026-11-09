@@ -68,6 +68,7 @@ async function showSharedRanking() {
   }
   function render(data) {
     const sections = Object.keys(rankingSections).filter(key => Array.isArray(data[key]));
+    if (sections.length > 1 && data.personal) sections.splice(sections.indexOf('personal'), 1);
     if (!sections.includes(activeSection)) activeSection = sections[0];
     navigation.replaceChildren();
     navigation.hidden = sections.length < 2;
@@ -114,8 +115,21 @@ async function showSharedRanking() {
         badge.className = 'ranking-position';
         title.append(badge);
       }
-      title.append(element('span', row.name));
+      const personalRows = data.personal?.filter(player => player.name === row.name) ?? [];
+      if (personalRows.length) {
+        const link = element('button', row.name);
+        link.type = 'button';
+        link.className = 'ranking-player-link';
+        link.onclick = () => openPersonal(data, row.name, personalRows);
+        title.append(link);
+      } else {
+        title.append(element('span', row.name));
+      }
       card.append(title);
+      if (section === 'personal') {
+        cards.append(card);
+        continue;
+      }
       const primary = section === 'rating' ? 'rating' : 'points';
       if (Object.hasOwn(fields, primary)) {
         const highlight = element('p');
@@ -133,7 +147,24 @@ async function showSharedRanking() {
         table(detail, row.trend, {date:'対局日',rating:'レート'});
         card.append(detail);
       }
-      if (section === 'personal' && Array.isArray(row.opponents)) {
+      cards.append(card);
+    }
+    content.append(cards);
+  }
+  function openPersonal(data, name, rows) {
+    const dialog = el('rankingPlayerDialog');
+    const body = el('rankingPlayerContent');
+    el('rankingPlayerTitle').textContent = name + 'の個人成績';
+    body.replaceChildren();
+    if (rows.length > 1) body.append(element('p', '同じ表示名の選手が複数います。'));
+    const fields = Object.fromEntries(Object.entries(rankingFields.personal)
+      .filter(([key]) => data.options.personal.includes(key) && key !== 'opponents'));
+    rows.forEach((row, index) => {
+      const card = element('article');
+      card.className = 'ranking-player';
+      if (rows.length > 1) card.append(element('h3', '同名の選手 ' + (index + 1)));
+      if (Object.keys(fields).length) metrics(card, row, fields);
+      if (Array.isArray(row.opponents)) {
         const detail = element('details');
         detail.append(element('summary', '対戦相手別成績'));
         const opponentFields = {rounds:'同卓数',wins:'勝',losses:'負',ties:'分',winRate:'勝率',
@@ -145,9 +176,9 @@ async function showSharedRanking() {
         if (!row.opponents.length) detail.append(element('p', '該当する対戦相手はいません。'));
         card.append(detail);
       }
-      cards.append(card);
-    }
-    content.append(cards);
+      body.append(card);
+    });
+    dialog.showModal();
   }
   async function refresh(month) {
     period.disabled = mode.disabled = true;
