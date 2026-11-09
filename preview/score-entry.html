@@ -83,7 +83,7 @@ function addRound(values = []) {
     const input = document.createElement('input');
     input.type = 'number';
     input.step = '1';
-    input.inputMode = 'text';
+    input.inputMode = 'decimal';
     input.placeholder = '—';
     input.value = values[i] ?? '';
     input.setAttribute('aria-label', number + '半荘目 ' + name + 'の点数');
