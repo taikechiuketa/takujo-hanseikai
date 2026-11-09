@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>卓ランキング｜卓上反省会</title>
+<link rel="stylesheet" href="./sheet.css">
+<script defer src="./vendor/supabase-2.119.0.js"></script>
+<script defer src="./ranking.js"></script>
+</head>
+<body><main>
+<header class="brand-header"><div><h1 id="rankingTitle">卓上反省会</h1><p>卓ランキング</p></div></header>
+<p id="rankingStatus" role="status">成績を読み込み中…</p>
+<section id="rankingPanel" class="card" hidden>
+<label>集計期間 <select id="rankingPeriod"></select></label>
+<div style="overflow:auto"><table class="history-table">
+<thead><tr><th>順位</th><th>プレイヤー</th><th>合計pt</th><th>半荘数</th></tr></thead>
+<tbody id="rankingRows"></tbody>
+</table></div>
+</section>
+</main></body></html>

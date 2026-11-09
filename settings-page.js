@@ -9,7 +9,10 @@ async function showSettingsPage() {
     document.getElementById('localGroupControls').hidden = !local;
     document.getElementById('cloudAttachmentNote').hidden = local;
     initTemplateGroups(appearance);
-    if (appearance) enableGroupDelete(appearance);
+    if (appearance) {
+      enableGroupDelete(appearance);
+      enableRankingShare(appearance);
+    }
     const playLink = document.getElementById('playLink');
     playLink.href = './index.html' + location.search;
     playLink.hidden = false;
@@ -61,4 +64,53 @@ function enableGroupDelete(appearance) {
       buttons.forEach(button => { button.disabled = false; });
     }
   };
+}
+
+function enableRankingShare(appearance) {
+  const el = id => document.getElementById(id);
+  const status = el('rankingShareStatus');
+  const enable = el('enableRankingShare');
+  const disable = el('disableRankingShare');
+  const preview = el('previewRankingShare');
+  const copy = el('copyRankingShare');
+  const retry = el('retryRankingShare');
+  const controls = [enable, disable, preview, copy, retry];
+
+  async function refresh(action) {
+    controls.forEach(control => { control.hidden = true; });
+    preview.removeAttribute('href');
+    status.textContent = '共有状態を確認中…';
+    try {
+      const token = await appearance.rankingShare(action);
+      status.textContent = token ? '共有中' : '共有オフ';
+      enable.hidden = Boolean(token);
+      if (token) {
+        const url = new URL('./ranking.html', location.href);
+        url.hash = token;
+        preview.href = url.href;
+        preview.hidden = copy.hidden = disable.hidden = false;
+      }
+    } catch (error) {
+      status.textContent = error.code === 'PGRST205'
+        ? 'ランキング共有のDB設定が必要です。'
+        : '共有状態を確認できませんでした。';
+      retry.hidden = false;
+    }
+  }
+
+  enable.onclick = () => {
+    if (confirm('卓名とランキングを、リンクを知っている人に公開しますか？')) refresh('enable');
+  };
+  disable.onclick = () => {
+    if (confirm('このランキングの共有リンクを無効にしますか？')) refresh('disable');
+  };
+  copy.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(preview.href);
+      status.textContent = '共有中 · リンクをコピーしました。';
+    } catch { prompt('ランキング共有リンクをコピーしてください。', preview.href); }
+  };
+  retry.onclick = () => refresh();
+  el('rankingShareSection').hidden = false;
+  refresh();
 }

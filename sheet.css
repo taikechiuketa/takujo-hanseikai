@@ -84,3 +84,5 @@ button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f
 #cloudControls:not([hidden]){margin-bottom:.75rem}
 
 .share-state.is-shared{background:#d9f2e5;color:#155137}
+
+#previewRankingShare[hidden]{display:none}
