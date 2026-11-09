@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="./sheet.css?v=palette-save-1">
 <link rel="stylesheet" href="./settings-lavender.css?v=5">
 <script defer src="./vendor/supabase-2.119.0.js"></script>
-<script defer src="./template-groups.js?v=palette-preview-2"></script>
+<script defer src="./rule-format.js?v=1"></script><script defer src="./template-groups.js?v=rule-format-1"></script>
 <script defer src="./cloud-sheet.js?v=palette-save-1"></script>
 <script defer src="./ranking-options.js"></script>
 <script defer src="./settings-page.js?v=ranking-options-1"></script>
@@ -52,7 +52,9 @@
     <form id="groupSettings">
       <p><label>グループ名 <input id="groupName" required maxlength="60"></label></p>
       <div class="file-row"><strong>ロゴ画像</strong><label class="file-picker">ロゴ画像を選ぶ<input id="groupLogoFile" type="file" accept="image/png,image/jpeg,image/webp" aria-label="ロゴ画像を選ぶ"></label><span id="logoSelection" role="status"></span><label><input id="removeLogo" type="checkbox">ロゴを削除</label></div>
+      <div id="groupRulesToolbar" role="group" aria-label="ルール本文の書式" style="display:flex;flex-wrap:wrap;gap:6px"></div>
       <p><label>ルール本文<br><textarea id="groupRules" rows="5" maxlength="12000"></textarea></label></p>
+      <details><summary>編集中のプレビュー</summary><div id="groupRulesDraft" style="white-space:pre-wrap;overflow-wrap:anywhere"></div></details>
       <div class="file-row"><strong>点数表</strong><label class="file-picker">画像・PDFを選ぶ<input id="groupScoreFile" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" aria-label="点数表の画像・PDFを選ぶ"></label><span id="scoreSelection" role="status"></span><label><input id="removeScore" type="checkbox">点数表を削除</label></div>
       <p id="cloudAttachmentNote" class="hint" hidden>画像・PDFはこの端末のブラウザに保存されます。</p>
       <p class="hint">PNG・JPEG・WebP（点数表はPDFも可）。各10 MBまで。選択後に設定を保存してください。</p>
@@ -60,7 +62,7 @@
     </form>
   </details>
   <details><summary>このグループのルール・点数表を見る</summary>
-    <p id="groupRulesPreview" style="white-space:pre-wrap;overflow-wrap:anywhere"></p>
+    <div id="groupRulesPreview" style="white-space:pre-wrap;overflow-wrap:anywhere"></div>
     <img id="groupScorePreview" alt="登録した点数表" hidden><a id="groupScoreLink" download hidden>点数表をダウンロード</a>
   </details>
 </section>
