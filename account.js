@@ -1,11 +1,5 @@
 const el = id => document.getElementById(id);
 const message = value => { el('status').textContent = value; };
-const templates = {
-  standard: '',
-  sanma: '対局形式：三人麻雀',
-  yonma: '対局形式：四人麻雀',
-};
-
 async function start() {
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
   const db = createClient(
@@ -21,6 +15,7 @@ async function start() {
   function resetGroup() {
     selected = null;
     form.reset();
+    el('groupRulesField').hidden = true;
     el('groupHeading').textContent = '新しいグループ';
   }
 
@@ -34,7 +29,7 @@ async function start() {
     el('groups').hidden = !userId;
     if (!userId) return;
 
-    const { data, error } = await db.from('groups').select('id,name,template_key,settings').order('created_at');
+    const { data, error } = await db.from('groups').select('id,name,settings').order('created_at');
     if (version !== refreshVersion) return;
     if (error) throw error;
     if (!data.length) el('groupList').append(Object.assign(document.createElement('li'), { textContent: 'グループはまだありません。' }));
@@ -46,7 +41,7 @@ async function start() {
         selected = group;
         el('groupHeading').textContent = 'グループ設定を編集';
         form.elements.name.value = group.name;
-        form.elements.template.value = group.template_key;
+        el('groupRulesField').hidden = false;
         form.elements.rules.value = group.settings.rules ?? '';
       };
       item.append(button);
@@ -75,9 +70,6 @@ async function start() {
     finally { buttons.forEach(button => { button.disabled = false; }); }
   };
 
-  form.elements.template.onchange = () => {
-    if (!selected) form.elements.rules.value = templates[form.elements.template.value];
-  };
   el('newGroup').onclick = resetGroup;
   el('signout').onclick = async () => {
     const { error } = await db.auth.signOut({ scope: 'local' });
@@ -96,12 +88,9 @@ async function start() {
     const button = event.submitter;
     button.disabled = true;
     try {
-      const payload = {
-        name,
-        template_key: form.elements.template.value,
-        settings: { ...selected?.settings, rules: form.elements.rules.value },
-      };
-      const query = selected ? db.from('groups').update(payload).eq('id', selected.id) : db.from('groups').insert(payload);
+      const query = selected
+        ? db.from('groups').update({ name, settings: { ...selected.settings, rules: form.elements.rules.value } }).eq('id', selected.id)
+        : db.from('groups').insert({ name });
       const { error } = await query.select('id').single();
       if (error) throw error;
       resetGroup();
