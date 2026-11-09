@@ -86,3 +86,11 @@ button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f
 .share-state.is-shared{background:#d9f2e5;color:#155137}
 
 #previewRankingShare[hidden]{display:none}
+
+.rate-settings{margin-top:.5rem}
+.rate-settings summary{min-height:44px;display:list-item;padding:.65rem .25rem;cursor:pointer}
+.entry-player-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.65rem 0}
+.entry-player-actions button,.entry-add-round,.entry-save-actions button{min-height:44px}
+.entry-add-round{width:100%;margin-top:.65rem;border:1px dashed var(--theme-border,#d9e1d9)}
+.entry-save-actions{border-top:1px solid var(--theme-border,#d9e1d9);padding-top:.75rem;margin-top:.75rem}
+.entry-save-actions button{flex:1}
