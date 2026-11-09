@@ -68,3 +68,6 @@
 :root{background:var(--theme-bg,#f3f3f5);color:var(--theme-text,#171b21)}
 .card,dialog{background:var(--theme-surface,#fff);border-color:var(--theme-border,#e4e4e7)}
 button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f5);color:var(--theme-text,#171b21)}
+
+.theme-dot{width:25px;height:16px;border:1px solid var(--theme-border,#ddd);border-radius:4px}
+.theme-choices{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}

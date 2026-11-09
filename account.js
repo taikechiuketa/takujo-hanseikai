@@ -29,18 +29,24 @@ async function start() {
     const { data, error } = await db.from('groups').select('id,name').order('created_at');
     if (version !== refreshVersion) return;
     if (error) throw error;
-    if (!data.length) el('groupList').append(Object.assign(document.createElement('li'), { textContent: 'グループはまだありません。' }));
+    if (!data.length) el('groupList').append(Object.assign(document.createElement('li'), { className: 'empty-state', textContent: 'まだ卓がありません。下のフォームから最初のグループを作成できます。' }));
     for (const group of data) {
       const item = document.createElement('li');
+      item.className = 'table-card';
       const name = document.createElement('strong');
       name.textContent = group.name;
       const play = document.createElement('a');
+      play.className = 'primary-link';
       play.textContent = '対局を入力';
       play.href = './index.html?' + new URLSearchParams({ group: group.id });
       const settings = document.createElement('a');
+      settings.className = 'secondary-link';
       settings.textContent = '卓の設定';
       settings.href = './settings.html?' + new URLSearchParams({ group: group.id });
-      item.append(name, ' ', play, ' / ', settings);
+      const actions = document.createElement('div');
+      actions.className = 'table-actions';
+      actions.append(play, settings);
+      item.append(name, actions);
       el('groupList').append(item);
     }
   }

@@ -3,27 +3,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>卓上反省会｜グループ管理</title>
-<style>
-*{box-sizing:border-box}body{font:1rem system-ui,sans-serif;background:#eef2f7;color:#182337;margin:0}main{max-width:42rem;margin:auto;padding:1rem}section{background:white;border-radius:1rem;padding:1rem;margin:1rem 0}label[hidden]{display:none}label{display:block;margin:.7rem 0}input,select,textarea,button{font:inherit;padding:.6rem;border:1px solid #8492a5;border-radius:.4rem}input,textarea{width:100%}button{background:#254db6;color:white;cursor:pointer;margin:.25rem}li{margin:.5rem 0}button:disabled{opacity:.6}
-</style>
+<link rel="stylesheet" href="./account.css">
 <main>
-<h1>卓上反省会</h1>
+<header class="masthead">
+<div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<div><p class="eyebrow">MAHJONG SCOREBOOK</p><h1>卓上反省会</h1><p class="tagline">いつものメンツの、麻雀成績帳。</p></div>
+</header>
 <p id="status" role="status" aria-live="polite"></p>
 <section id="login" hidden>
+<p class="eyebrow">WELCOME</p>
 <h2>ログイン</h2>
+<p class="muted">ログインすると、自分の卓の対局と成績を確認できます。</p>
 <form id="auth">
 <label>メールアドレス<input name="email" type="email" autocomplete="email" required></label>
 <label>パスワード<input name="password" type="password" autocomplete="current-password" required></label>
 <button name="action" value="login">ログイン</button>
-<button name="action" value="signup">アカウントを作成</button>
+<button class="secondary" name="action" value="signup">アカウントを作成</button>
 </form>
 </section>
 <section id="groups" hidden>
-<h2>グループ管理</h2>
-<button id="signout">ログアウト</button>
-<button id="reload">一覧を再読み込み</button>
+<div class="panel-heading"><div><p class="eyebrow">YOUR TABLES</p><h2>マイグループ</h2></div>
+<div class="toolbar"><button id="reload" class="secondary">再読み込み</button><button id="signout" class="secondary">ログアウト</button></div></div>
 <ul id="groupList"></ul>
-<form id="groupForm">
+<form id="groupForm" class="create-group">
 <h3 id="groupHeading">新しいグループ</h3>
 <label>グループ名<input name="name" required maxlength="60"></label>
 <button>グループを作成</button>
@@ -31,5 +33,5 @@
 </section>
 </main>
 <script src="./vendor/supabase-2.119.0.js"></script>
-<script type="module" src="./account.js?v=6"></script>
+<script type="module" src="./account.js?v=7"></script>
 </html>

@@ -11,6 +11,14 @@ function initTemplateGroups(cloud) {
         headerColor: cloud.settings.headerColor || defaults.headerColor, rules: cloud.settings.rules || '' }
     : { ...defaults, ...JSON.parse(localStorage.getItem(settingsKey) || '{}') };
   const themes = {
+    felt: ['深緑の雀卓', '#14604c', '#e5efdf', '#fcfaf0', '#d1e2ce', '#a5c2ae', '#19392e'],
+    midnight: ['深夜の雀荘', '#20395f', '#dbe3f0', '#f5f8ff', '#cdd8ea', '#a4b5d0', '#172740'],
+    ivory: ['白牌と真鍮', '#73521e', '#eee3cc', '#fffcf2', '#e8dbc0', '#cab589', '#382c1b'],
+    neon: ['ネオン街', '#722a8a', '#eee0fa', '#fffbff', '#e6cdf4', '#caa7dc', '#342042'],
+    lacquer: ['漆と朱', '#921e29', '#f4e4df', '#fffbf5', '#eed4cd', '#d4a8a0', '#442427'],
+    porcelain: ['青花磁器', '#204c86', '#e5edf3', '#fcfdff', '#d5e3ef', '#a7bdd6', '#233b52'],
+    smoke: ['墨と銀', '#424651', '#e2e5ea', '#fafbfc', '#d4d9df', '#aab2bf', '#232732'],
+    sunset: ['黄昏の卓', '#87401f', '#f6e3d7', '#fff9f2', '#f1d4c4', '#d9aa91', '#452a24'],
     red: ['紅', '#a51d3b', '#fff1f3', '#fffafb', '#fce4e9', '#e8c4cc', '#351d25'],
     blue: ['藍', '#254db6', '#eef4ff', '#fbfdff', '#dce8ff', '#bfceed', '#192e54'],
     green: ['深緑', '#197053', '#eaf7ef', '#fafffb', '#d8efe2', '#b9daca', '#183a2c'],
@@ -71,7 +79,7 @@ function initTemplateGroups(cloud) {
     applyHeaderColor(headerColor.value);
   };
 
-  for (const [key, [name, accent]] of Object.entries(themes)) {
+  for (const [key, [name, accent, background, surface]] of Object.entries(themes)) {
     const label = document.createElement('label');
     label.className = 'theme-choice';
     const radio = document.createElement('input');
@@ -81,7 +89,7 @@ function initTemplateGroups(cloud) {
     radio.onchange = () => applyTheme(key);
     const dot = document.createElement('span');
     dot.className = 'theme-dot';
-    dot.style.backgroundColor = accent;
+    dot.style.background = 'linear-gradient(90deg,' + accent + ' 34%,' + background + ' 34% 67%,' + surface + ' 67%)';
     label.append(radio, dot, name);
     el('themeChoices').append(label);
   }
