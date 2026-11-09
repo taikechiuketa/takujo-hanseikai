@@ -9,5 +9,9 @@
 .lavender-settings .brand-header{border-bottom-color:#c6b1f8;border-radius:20px}
 #headerSliders label{display:grid;grid-template-columns:5em minmax(0,1fr);align-items:center;gap:8px}
 #headerSliders input[type=range]{width:100%;min-height:44px;padding:0}
-.lavender-settings .palette-example{display:flex;flex-wrap:wrap;gap:14px;background:var(--theme-muted);color:var(--theme-text);border:1px solid var(--theme-border);border-radius:10px;padding:12px;margin:12px 0}
 .lavender-settings #paletteSettings button[type=submit]{background:var(--accent)}
+.lavender-settings .palette-example{background:var(--theme-bg);color:var(--theme-text);border:1px solid var(--theme-border);border-radius:14px;padding:12px;margin:12px 0}
+.palette-example h3{margin:0}
+.palette-example-header{background:var(--header-bg);color:var(--header-text);border-bottom:4px solid var(--accent);padding:10px;border-radius:10px;overflow-wrap:anywhere}
+.palette-example-card{background:var(--theme-surface);border:1px solid var(--theme-border);border-radius:10px;padding:10px;margin-top:8px}
+.palette-example-action{display:inline-block;background:var(--accent);color:white;border-radius:8px;padding:6px 10px;font-weight:650}

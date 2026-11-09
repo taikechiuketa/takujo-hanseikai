@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#f5f2fc">
 <title>卓の設定｜卓上反省会</title>
 <link rel="stylesheet" href="./sheet.css?v=palette-save-1">
-<link rel="stylesheet" href="./settings-lavender.css?v=3">
+<link rel="stylesheet" href="./settings-lavender.css?v=4">
 <script defer src="./vendor/supabase-2.119.0.js"></script>
-<script defer src="./template-groups.js?v=palette-save-1"></script>
+<script defer src="./template-groups.js?v=palette-preview-2"></script>
 <script defer src="./cloud-sheet.js?v=palette-save-1"></script>
 <script defer src="./ranking-options.js"></script>
 <script defer src="./settings-page.js?v=ranking-options-1"></script>
@@ -31,7 +31,16 @@
         </div>
         <p class="hint">プレビュー中の色 <output id="headerColorCode"></output></p>
       </fieldset>
-    <div class="palette-example" aria-label="配色の見本"><strong>半荘スコアの見本</strong><span>+28 pt</span><span class="negative">−12 pt</span></div>
+    <section class="palette-example" aria-labelledby="palettePreviewTitle">
+      <h3 id="palettePreviewTitle">対局画面のプレビュー</h3>
+      <p id="palettePreviewTheme" class="hint" aria-live="polite"></p>
+      <div class="palette-example-header"><strong id="palettePreviewGroup"></strong></div>
+      <div class="palette-example-card">
+        <strong>半荘スコア一覧</strong>
+        <table class="history-table"><thead><tr><th scope="col">半荘</th><th scope="col">アオ</th><th scope="col">ハル</th></tr></thead><tbody><tr><th scope="row">第１半荘</th><td>+28 pt</td><td class="negative">−12 pt</td></tr></tbody></table>
+        <span class="palette-example-action">セットを保存</span>
+      </div>
+    </section>
     <button type="submit">配色を保存</button> <span id="paletteStatus" role="status"></span>
   </form>
 </section>

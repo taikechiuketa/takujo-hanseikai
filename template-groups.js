@@ -111,6 +111,9 @@ function initTemplateGroups(cloud) {
     const color = headerFor(palette.elements.theme.value, headerMode.value, customColor);
     el('headerSliders').hidden = headerMode.value !== 'custom';
     colorCode.value = color.toUpperCase();
+    el('palettePreviewTheme').textContent = 'プレビュー中のテーマ：' + themes[palette.elements.theme.value][0];
+    el('palettePreviewGroup').textContent = settings.name;
+
     applyHeaderColor(color);
   }
   function initializeSliders(hex) {
@@ -178,6 +181,7 @@ function initTemplateGroups(cloud) {
 
   function render() {
     el('groupTitle').textContent = settings.name;
+    if (palette) el('palettePreviewGroup').textContent = settings.name;
     if (form) {
       el('groupName').value = settings.name;
       el('groupRules').value = settings.rules;
