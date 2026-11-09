@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>卓上反省会｜入口デザイン試作</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#231c38;background:#f5f2fc;--purple:#5436ba;--muted:#655d78;--line:#e5def2}*{box-sizing:border-box}body{margin:0}main{max-width:940px;margin:auto;padding:18px 16px 40px}header,nav,.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}header{justify-content:space-between;margin-bottom:24px}nav{gap:4px}button,input{font:inherit}button{cursor:pointer;border:0;border-radius:12px;min-height:44px;padding:9px 14px;font-weight:700;color:#423563;background:#ece5fb}button[aria-pressed=true],.primary{background:var(--purple);color:white}button:focus-visible,input:focus-visible{outline:3px solid #7754d6;outline-offset:2px}.badge{font-size:12px;background:#ffe3db;color:#7c3325;border-radius:20px;padding:6px 10px;font-weight:750}.hero{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}.intro,.card{padding:clamp(20px,4vw,34px);border-radius:24px;border:1px solid var(--line)}.intro{background:#eae1ff}.card{background:white;box-shadow:0 10px 30px #39246e0b}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--purple)}h1{font-size:clamp(29px,5vw,46px);line-height:1.18;margin:12px 0}h2,h3{margin:0 0 10px}.muted{color:var(--muted);line-height:1.65}.tiles{display:flex;gap:7px;margin:16px 0}.tiles i{font-style:normal;background:#fff;border-radius:9px;border-bottom:4px solid #c6b1f8;padding:8px 11px;color:#5436ba;font-weight:900}.tiles i:nth-child(2){transform:rotate(9deg);color:#a64539;border-color:#ffbca9}label{display:grid;gap:6px;margin:12px 0;font-size:14px;font-weight:650}input{width:100%;border:1px solid #cfc4e4;border-radius:10px;padding:11px;color:inherit;background:white}.groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.group{padding:18px}.icon{display:grid;place-items:center;min-width:44px;height:44px;border-radius:13px;background:#ece1ff;color:#5436ba;font-weight:800}.coral{background:#ffe3db;color:#883a2d}.group .row{margin:10px 0}.group h3{margin:0}.stack{display:grid;gap:12px}.setting{border-top:1px solid var(--line);padding-top:14px;margin-top:14px}#status{min-height:1.5em;color:#4d329c;font-weight:650}[hidden]{display:none!important}@media(max-width:640px){.hero,.groups{grid-template-columns:1fr}header{gap:8px;margin-bottom:14px}nav button{padding-inline:10px}.intro{padding:18px}.intro p:last-child{margin-bottom:0}}
+</style>
+<main>
+<header><strong>卓上反省会 <span class="badge">デザイン試作</span></strong><nav aria-label="試作画面"><button data-view="login" aria-pressed="true">ログイン</button><button data-view="groups" aria-pressed="false">グループ一覧</button><button data-view="settings" aria-pressed="false">卓の設定</button></nav></header>
+<section id="login" class="hero" data-screen>
+<div class="intro"><div class="tiles" aria-hidden="true"><i>一</i><i>中</i></div><p class="eyebrow">卓上反省会</p><h1>いつものメンツの、<br>麻雀成績帳。</h1><p class="muted">半荘のスコアも、あとから見返す成績も。仲間との対局をひとつの卓に。</p></div>
+<form class="card" id="loginForm"><p class="eyebrow">WELCOME</p><h2>ログイン</h2><label>メールアドレス<input type="email" value="demo@example.com" readonly></label><label>パスワード<input type="password" value="demo-preview" readonly></label><button class="primary">デモでログイン</button><p class="muted">架空のアカウントで画面を確認できます。</p></form>
+</section>
+<section id="groups" data-screen hidden><p class="eyebrow">MY GROUPS</p><h1>マイグループ</h1><p class="muted">いつもの卓を選んで始めよう。</p><div class="groups" id="groupList"></div></section>
+<section id="settings" data-screen hidden><p class="eyebrow">GROUP SETTINGS</p><h1>卓の設定</h1><form id="settingsForm" class="card stack"><h2>基本情報</h2><label>卓名<input id="groupName" required maxlength="40"></label><div class="setting"><h3>ルール・点数表</h3><p class="muted">卓のメンバーと確認するルールや点数表。</p></div><div class="setting"><h3>ランキングページの共有</h3><label style="display:flex;align-items:center"><input id="share" type="checkbox" style="width:auto">共有をオンにする</label></div><div class="row"><button class="primary">試作内で保存</button><button type="button" data-view="groups">一覧に戻る</button></div></form></section>
+<p id="status" role="status"></p>
+</main>
+<script>
+const groups=[{name:'金曜のいつメン',icon:'金',hint:'金曜の夜に集まる定例卓',share:true},{name:'ゆる三麻部',icon:'三',hint:'気が向いたら集まる三麻卓',share:false}];
+let active=0;
+const get=id=>document.getElementById(id);
+function show(view){
+  document.querySelectorAll('[data-screen]').forEach(el=>el.hidden=el.id!==view);
+  document.querySelectorAll('nav button').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.view===view)));
+  get('status').textContent='';
+  if(view==='settings'){get('groupName').value=groups[active].name;get('share').checked=groups[active].share;}
+}
+function list(){
+  get('groupList').replaceChildren(...groups.map((group,index)=>{
+    const card=document.createElement('article');card.className='card group';
+    card.innerHTML='<div class="row"><span class="icon" aria-hidden="true"></span><h3></h3></div><p class="muted"></p><div class="row"><button class="primary">対局を入力</button><button>卓の設定</button></div>';
+    card.querySelector('.icon').textContent=group.icon;card.querySelector('.icon').classList.toggle('coral',index===1);
+    card.querySelector('h3').textContent=group.name;card.querySelector('p').textContent=group.hint;
+    const [play,settings]=card.querySelectorAll('button');
+    play.onclick=()=>get('status').textContent='「'+group.name+'」の対局入力を開くボタンです。';
+    settings.onclick=()=>{active=index;show('settings');};
+    return card;
+  }));
+}
+document.querySelectorAll('[data-view]').forEach(el=>el.onclick=()=>show(el.dataset.view));
+get('loginForm').onsubmit=e=>{e.preventDefault();show('groups');};
+get('settingsForm').onsubmit=e=>{e.preventDefault();const name=get('groupName').value.trim();if(!name)return;groups[active].name=name;groups[active].share=get('share').checked;list();get('status').textContent='試作内で保存しました。';};
+list();
+</script>
+</html>
