@@ -7,3 +7,5 @@
 .lavender-settings :is(button.secondary,.file-picker,.back-link){background:#ece5fb;color:#423563;border-color:#e5def2}
 .lavender-settings :is(a,button,input,textarea,select,summary):focus-visible{outline:3px solid #7754d6;outline-offset:2px}
 .lavender-settings .brand-header{border-bottom-color:#c6b1f8;border-radius:20px}
+#headerSliders label{display:grid;grid-template-columns:5em minmax(0,1fr);align-items:center;gap:8px}
+#headerSliders input[type=range]{width:100%;min-height:44px;padding:0}

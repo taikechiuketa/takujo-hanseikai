@@ -5,12 +5,24 @@ function initTemplateGroups(cloud) {
   const id = cloud?.id ?? (Object.hasOwn(groups, requested) ? requested : 'demo');
   const prefix = 'mahjong-business-prototype-v1:' + id + ':';
   const settingsKey = prefix + 'settings';
-  const defaults = { name: cloud?.name ?? groups[id].name, theme: 'red', headerColor: '#171b21', rules: '', logo: '', score: null };
+  const defaults = { name: cloud?.name ?? groups[id].name, theme: 'lavender-soda', headerColor: '', headerMode: '', rules: '', logo: '', score: null };
+  const localSettings = cloud ? null : JSON.parse(localStorage.getItem(settingsKey) || '{}');
   const settings = cloud
     ? { ...defaults, theme: cloud.settings.theme || defaults.theme,
-        headerColor: cloud.settings.headerColor || defaults.headerColor, rules: cloud.settings.rules || '' }
-    : { ...defaults, ...JSON.parse(localStorage.getItem(settingsKey) || '{}') };
+        headerColor: cloud.settings.headerColor || defaults.headerColor,
+        headerMode: cloud.settings.headerMode || (cloud.settings.headerColor ? 'custom' : 'auto'), rules: cloud.settings.rules || '' }
+    : { ...defaults, ...localSettings };
   const themes = {
+    'lavender-soda': ['ラベンダーソーダ', '#5436ba', '#f5f2fc', '#ffffff', '#eae1ff', '#d9cfee', '#231c38'],
+    'peach-fizz': ['ピーチフィズ', '#a33f47', '#fff5f1', '#fffcfa', '#f7dcd7', '#ebc7bf', '#3d2528'],
+    'blue-hour': ['ブルーアワー', '#315c9b', '#eff5fc', '#ffffff', '#dce8fa', '#c5d6ec', '#1d2d44'],
+    'mint-glass': ['ミントグラス', '#176b62', '#eff8f5', '#fcfefd', '#d9efe8', '#bdd9d1', '#18352f'],
+    'ink-milk': ['インク＆ミルク', '#43465a', '#f4f4f7', '#ffffff', '#e7e8ef', '#cfd1dc', '#272936'],
+    'lemon-tart': ['レモンタルト', '#785315', '#fffae9', '#fffefa', '#f8e9b7', '#e0ce96', '#372e1d'],
+    'berry-milk': ['ベリーミルク', '#913b69', '#fcf1f7', '#fffdfd', '#f2daea', '#dec2d5', '#40243a'],
+    'sea-glass': ['シーグラス', '#24627d', '#eef7fa', '#fcfeff', '#d9edf2', '#bdd6df', '#213744'],
+    'sage-linen': ['セージリネン', '#4e6237', '#f5f7ee', '#fffffc', '#e4ead6', '#cbd6b8', '#303824'],
+    'mocha-cream': ['モカクリーム', '#795340', '#f8f2ec', '#fffdf9', '#efded1', '#dcc5b6', '#3d2b23'],
     felt: ['深緑の雀卓', '#14604c', '#e5efdf', '#fcfaf0', '#d1e2ce', '#a5c2ae', '#19392e'],
     midnight: ['深夜の雀荘', '#20395f', '#dbe3f0', '#f5f8ff', '#cdd8ea', '#a4b5d0', '#172740'],
     ivory: ['白牌と真鍮', '#73521e', '#eee3cc', '#fffcf2', '#e8dbc0', '#cab589', '#382c1b'],
@@ -31,6 +43,18 @@ function initTemplateGroups(cloud) {
     rose: ['薄紅', '#943758', '#fbf0f4', '#fffafb', '#f7e0eb', '#e4c3d1', '#402632'],
     olive: ['若草', '#52672a', '#f3f6e9', '#fdfff8', '#e8efd8', '#ccd8b3', '#313b22'],
     mono: ['墨白', '#353535', '#f0f0f0', '#fff', '#e9e9e9', '#d0d0d0', '#242424'],
+  };
+  const headers = {
+    'lavender-soda': {light:'#eae1ff',dark:'#413467',neutral:'#e8e5ed',auto:'#eae1ff'},
+    'peach-fizz': {light:'#f7dcd7',dark:'#673943',neutral:'#efe6e3',auto:'#f7dcd7'},
+    'blue-hour': {light:'#dce8fa',dark:'#304662',neutral:'#e4eaf1',auto:'#304662'},
+    'mint-glass': {light:'#d9efe8',dark:'#254941',neutral:'#e5ece9',auto:'#d9efe8'},
+    'ink-milk': {light:'#e7e8ef',dark:'#333647',neutral:'#e7e7e9',auto:'#333647'},
+    'lemon-tart': {light:'#f8e9b7',dark:'#534327',neutral:'#eee9dc',auto:'#f8e9b7'},
+    'berry-milk': {light:'#f2daea',dark:'#573549',neutral:'#ede5ea',auto:'#f2daea'},
+    'sea-glass': {light:'#d9edf2',dark:'#274a5a',neutral:'#e4ebed',auto:'#d9edf2'},
+    'sage-linen': {light:'#e4ead6',dark:'#3a4931',neutral:'#e9ebe3',auto:'#e4ead6'},
+    'mocha-cream': {light:'#efded1',dark:'#594236',neutral:'#ece5df',auto:'#594236'},
   };
   const el = name => document.getElementById(name);
   const form = el('groupSettings');
@@ -54,10 +78,10 @@ function initTemplateGroups(cloud) {
 
   function applyTheme(key) {
     const names = ['accent', 'theme-bg', 'theme-surface', 'theme-muted', 'theme-border', 'theme-text'];
-    (themes[key] || themes.red).slice(1).forEach((color, index) => {
+    (themes[key] || themes[defaults.theme]).slice(1).forEach((color, index) => {
       document.documentElement.style.setProperty('--' + names[index], color);
     });
-    document.querySelector('meta[name="theme-color"]').content = (themes[key] || themes.red)[1];
+    document.querySelector('meta[name="theme-color"]').content = (themes[key] || themes[defaults.theme])[1];
   }
 
   function applyHeaderColor(color) {
@@ -71,29 +95,64 @@ function initTemplateGroups(cloud) {
     document.documentElement.style.setProperty('--header-text', luminance > 0.179 ? '#000' : '#fff');
   }
 
-  const headerColor = el('headerColor');
+  const headerMode = el('headerMode');
+  const sliders = ['headerHue','headerSaturation','headerLightness'].map(el);
+  const colorCode = el('headerColorCode');
+  const validModes = ['auto','light','dark','neutral','custom'];
+  const savedMode = () => validModes.includes(settings.headerMode) ? settings.headerMode : settings.headerColor ? 'custom' : 'auto';
+  let customColor;
+  function headerFor(theme, mode, custom) {
+    const palette = themes[theme] || themes[defaults.theme];
+    const choices = headers[theme] || { light:palette[4], dark:palette[1], neutral:'#e7e7e9', auto:palette[4] };
+    return mode === 'custom' ? custom || choices.auto : choices[mode];
+  }
+  function updateHeader() {
+    const color = headerFor(form.elements.theme.value, headerMode.value, customColor);
+    el('headerSliders').hidden = headerMode.value !== 'custom';
+    colorCode.value = color.toUpperCase();
+    applyHeaderColor(color);
+  }
+  function initializeSliders(hex) {
+    const [r,g,b] = hex.slice(1).match(/../g).map(channel => parseInt(channel,16)/255);
+    const max = Math.max(r,g,b), min = Math.min(r,g,b), delta = max-min, light = (max+min)/2;
+    const hue = !delta ? 0 : max===r ? (g-b)/delta : max===g ? (b-r)/delta+2 : (r-g)/delta+4;
+    sliders[0].value = Math.round((hue*60+360)%360)%360;
+    sliders[1].value = delta ? Math.round(100*delta/(1-Math.abs(2*light-1))) : 0;
+    sliders[2].value = Math.round(light*100);
+  }
   if (form) {
-  headerColor.oninput = () => applyHeaderColor(headerColor.value);
-  el('resetHeaderColor').onclick = () => {
-    headerColor.value = defaults.headerColor;
-    applyHeaderColor(headerColor.value);
+  headerMode.onchange = updateHeader;
+  for (const slider of sliders) slider.oninput = () => {
+    const [h,s,l] = sliders.map(input => Number(input.value));
+    const light = l/100, amplitude = s/100*Math.min(light,1-light);
+    const channel = offset => {
+      const k = (offset+h/30)%12;
+      return Math.round(255*(light-amplitude*Math.max(-1,Math.min(k-3,9-k,1)))).toString(16).padStart(2,'0');
+    };
+    customColor = '#'+channel(0)+channel(8)+channel(4);
+    updateHeader();
   };
 
-  for (const [key, [name, accent, background, surface]] of Object.entries(themes)) {
-    const label = document.createElement('label');
-    label.className = 'theme-choice';
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.name = 'theme';
-    radio.value = key;
-    radio.onchange = () => applyTheme(key);
-    const dot = document.createElement('span');
-    dot.className = 'theme-dot';
-    dot.style.background = 'linear-gradient(90deg,' + accent + ' 34%,' + background + ' 34% 67%,' + surface + ' 67%)';
-    label.append(radio, dot, name);
-    el('themeChoices').append(label);
   }
 
+  function renderThemeChoices(selectedTheme) {
+    el('themeChoices').replaceChildren();
+    for (const [key, [name, accent, background, surface]] of Object.entries(themes)) {
+      if (!headers[key] && key !== selectedTheme) continue;
+      const label = document.createElement('label');
+      label.className = 'theme-choice';
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'theme';
+      radio.value = key;
+      radio.checked = key === selectedTheme;
+      radio.onchange = () => { applyTheme(key); updateHeader(); };
+      const dot = document.createElement('span');
+      dot.className = 'theme-dot';
+      dot.style.background = 'linear-gradient(90deg,' + accent + ' 34%,' + background + ' 34% 67%,' + surface + ' 67%)';
+      label.append(radio, dot, name);
+      el('themeChoices').append(label);
+    }
   }
 
   function openGroup(groupId) {
@@ -106,13 +165,17 @@ function initTemplateGroups(cloud) {
     el('groupTitle').textContent = settings.name;
     if (form) {
       el('groupName').value = settings.name;
-      form.elements.theme.value = settings.theme;
+      const selectedTheme = themes[settings.theme] ? settings.theme : defaults.theme;
+      renderThemeChoices(selectedTheme);
       el('groupRules').value = settings.rules;
-      headerColor.value = settings.headerColor;
+      headerMode.value = savedMode();
+      customColor = /^#[0-9a-f]{6}$/i.test(settings.headerColor) ? settings.headerColor : headerFor(selectedTheme,'auto');
+      initializeSliders(customColor);
+      updateHeader();
     }
     el('groupRulesPreview').textContent = settings.rules || 'ルールは未設定です。';
     applyTheme(settings.theme);
-    applyHeaderColor(settings.headerColor);
+    if (!form) applyHeaderColor(headerFor(settings.theme,savedMode(),settings.headerColor));
 
     if (logoUrl) URL.revokeObjectURL(logoUrl);
     if (scoreUrl) URL.revokeObjectURL(scoreUrl);
@@ -192,7 +255,7 @@ function initTemplateGroups(cloud) {
     const submit = event.submitter;
     submit.disabled = true;
     try {
-      const next = { ...settings, name, theme: form.elements.theme.value, headerColor: headerColor.value, rules: el('groupRules').value };
+      const next = { ...settings, name, theme: form.elements.theme.value, headerMode: headerMode.value, headerColor: headerFor(form.elements.theme.value, headerMode.value, customColor), rules: el('groupRules').value };
       const logoFile = el('groupLogoFile').files[0];
       const scoreFile = el('groupScoreFile').files[0];
       if (logoFile) {
@@ -207,7 +270,7 @@ function initTemplateGroups(cloud) {
       else if (el('removeScore').checked) next.score = null;
       if (cloud) {
         await cloud.save(next);
-        Object.assign(settings, { name: next.name, theme: next.theme, headerColor: next.headerColor, rules: next.rules });
+        Object.assign(settings, { name: next.name, theme: next.theme, headerColor: next.headerColor, headerMode: next.headerMode, rules: next.rules });
         await accessSettings('readwrite', records => records.put({ logo: next.logo, score: next.score }, id));
       } else {
         await accessSettings('readwrite', records => records.put(next, id));

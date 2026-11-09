@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#f5f2fc">
 <title>卓の設定｜卓上反省会</title>
 <link rel="stylesheet" href="./sheet.css?v=ranking-options-1">
-<link rel="stylesheet" href="./settings-lavender.css?v=1">
+<link rel="stylesheet" href="./settings-lavender.css?v=2">
 <script defer src="./vendor/supabase-2.119.0.js"></script>
-<script defer src="./template-groups.js?v=themes-2"></script>
-<script defer src="./cloud-sheet.js?v=ranking-options-1"></script>
+<script defer src="./template-groups.js?v=palette-10"></script>
+<script defer src="./cloud-sheet.js?v=palette-10"></script>
 <script defer src="./ranking-options.js"></script>
 <script defer src="./settings-page.js?v=ranking-options-1"></script>
 </head>
@@ -25,7 +25,16 @@
     <form id="groupSettings">
       <p><label>グループ名 <input id="groupName" required maxlength="60"></label></p>
       <fieldset class="theme-field"><legend>配色テーマ</legend><div id="themeChoices" class="theme-choices"></div><p class="hint">選ぶと画面にプレビューされます。「設定を保存」で確定します。</p></fieldset>
-      <p><label>ヘッダーの背景色 <input id="headerColor" type="color" value="#171b21"></label> <button type="button" class="secondary" id="resetHeaderColor">標準色に戻す</button></p>
+      <fieldset class="theme-field">
+        <legend>ヘッダーの背景色</legend>
+        <label>色の選び方 <select id="headerMode"><option value="auto">テーマに合わせる</option><option value="light">淡色</option><option value="dark">濃色</option><option value="neutral">ニュートラル</option><option value="custom">自由指定</option></select></label>
+        <div id="headerSliders" hidden>
+          <label>色相 <input id="headerHue" type="range" min="0" max="359"></label>
+          <label>鮮やかさ <input id="headerSaturation" type="range" min="0" max="100"></label>
+          <label>明るさ <input id="headerLightness" type="range" min="0" max="100"></label>
+        </div>
+        <p class="hint">プレビュー中の色 <output id="headerColorCode"></output></p>
+      </fieldset>
       <div class="file-row"><strong>ロゴ画像</strong><label class="file-picker">ロゴ画像を選ぶ<input id="groupLogoFile" type="file" accept="image/png,image/jpeg,image/webp" aria-label="ロゴ画像を選ぶ"></label><span id="logoSelection" role="status"></span><label><input id="removeLogo" type="checkbox">ロゴを削除</label></div>
       <p><label>ルール本文<br><textarea id="groupRules" rows="5" maxlength="12000"></textarea></label></p>
       <div class="file-row"><strong>点数表</strong><label class="file-picker">画像・PDFを選ぶ<input id="groupScoreFile" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" aria-label="点数表の画像・PDFを選ぶ"></label><span id="scoreSelection" role="status"></span><label><input id="removeScore" type="checkbox">点数表を削除</label></div>

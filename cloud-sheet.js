@@ -44,7 +44,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
       if (error || !data) throw new Error('削除を確認できませんでした。グループ一覧を開き直して確認してください。');
     },
     async save(next) {
-      const settings = { ...savedSettings, theme: next.theme, headerColor: next.headerColor, rules: next.rules };
+      const settings = { ...savedSettings, theme: next.theme, headerColor: next.headerColor, headerMode: next.headerMode, rules: next.rules };
       const { data, error } = await db.from('groups').update({ name: next.name, settings })
         .eq('id', groupId).eq('name', savedName).eq('settings', JSON.stringify(savedSettings))
         .select('id').maybeSingle();
