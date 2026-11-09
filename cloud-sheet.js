@@ -63,23 +63,65 @@ async function openCloudSheet(groupId, settingsOnly = false) {
     ['history', JSON.stringify(history)],
     ['players', JSON.stringify(group.sheet_players)],
   ]);
+  const recoveryKey = 'hansei-sheet-draft:' + auth.user.id + ':' + groupId;
+  let recovery;
+  try { recovery = JSON.parse(localStorage.getItem(recoveryKey)); } catch {}
+  const sameBase = recovery && recovery.revision === group.sheet_revision;
+  const alreadySaved = recovery?.pending?.payload.request_id === group.sheet_revision;
+  const restore = sameBase || alreadySaved;
+  const conflict = recovery && !restore;
+  if (restore) {
+    for (const [key, value] of recovery.entries) storageData.set(key, value);
+  }
+  let changed = () => {};
   const storage = {
     getItem: key => storageData.get(key) ?? null,
-    setItem: (key, value) => storageData.set(key, value),
-    removeItem: key => storageData.delete(key),
+    setItem(key, value) { storageData.set(key, value); changed(); },
+    removeItem(key) { storageData.delete(key); changed(); },
   };
   return {
     storage,
+    save: null,
     connect(keys) {
       initTemplateGroups(appearance);
       el('cloudControls').hidden = false;
       status.hidden = false;
-      status.textContent = '対局の変更は「この卓をDBに保存」で確定します。';
-
       const snapshot = () => JSON.stringify([...storageData]);
-      let lastSaved = snapshot();
+      let lastSaved = restore ? (alreadySaved ? recovery.pending.snapshot : null) : snapshot();
       let revision = group.sheet_revision;
-      let pending;
+      let pending = sameBase ? recovery.pending : undefined;
+      const button = el('cloudSave');
+      function keepDraft() {
+        try {
+          if (!pending && snapshot() === lastSaved) localStorage.removeItem(recoveryKey);
+          else localStorage.setItem(recoveryKey, JSON.stringify({ revision, pending, entries: [...storageData] }));
+          return true;
+        } catch { return false; }
+      }
+      changed = () => {
+        if (!conflict) status.textContent = keepDraft() ? '未保存の変更があります。' : '未保存です。この端末に下書きを残せませんでした。';
+      };
+      status.textContent = restore ? 'この端末の下書きを復元しました。' : 'セットの保存・終了でDBに保存します。';
+      if (conflict) {
+        status.textContent = 'DBに新しい記録があります。この端末の下書きをダウンロードしてから編集を再開してください。';
+        button.textContent = '下書きをダウンロード';
+        button.onclick = () => {
+          const values = Object.fromEntries(recovery.entries.map(([key, value]) => [key, JSON.parse(value)]));
+          const backup = { format: 'takechao-backup', version: 1, savedAt: new Date().toISOString(), current: values.current, history: values.history, master: values.players };
+          const url = URL.createObjectURL(new Blob([JSON.stringify(backup)], { type: 'application/json' }));
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'hansei-unsaved-backup.json';
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          if (confirm('下書きをダウンロードしました。端末の下書きをクリアしてDBの記録を開き直しますか？')) {
+            localStorage.removeItem(recoveryKey);
+            location.reload();
+          }
+        };
+        this.save = () => {};
+        return;
+      }
       window.addEventListener('beforeunload', event => {
         if (pending || snapshot() !== lastSaved) {
           event.preventDefault();
@@ -87,11 +129,11 @@ async function openCloudSheet(groupId, settingsOnly = false) {
         }
       });
 
-      const button = el('cloudSave');
-      button.onclick = async () => {
+      this.save = button.onclick = async () => {
+        if (button.disabled) return;
         if (!pending) {
           const draft = JSON.parse(storage.getItem(keys.current));
-          const sets = JSON.parse(storage.getItem(keys.history));
+          const sets = JSON.parse(storage.getItem(keys.history)) || [];
           if (!draft || sets.some(set => !set.date || !set.sequence)) {
             status.textContent = '保存する対局の日付・伝票番号を確認してください。';
             return;
@@ -104,6 +146,7 @@ async function openCloudSheet(groupId, settingsOnly = false) {
             },
           };
         }
+        keepDraft();
         button.disabled = true;
         status.textContent = '保存中…';
         try {
@@ -111,16 +154,19 @@ async function openCloudSheet(groupId, settingsOnly = false) {
           if (saveError) {
             if (saveError.code === '40001') {
               pending = undefined;
+              keepDraft();
               status.textContent = '別の画面から更新されています。入力内容をJSONで退避し、再読み込みしてください。';
               return;
             }
             if (saveError.code !== 'FETCH_ERROR' && saveError.code) pending = undefined;
+            keepDraft();
             status.textContent = '保存できませんでした。入力を確認して再試行してください。';
             return;
           }
           revision = data;
           lastSaved = pending.snapshot;
           pending = undefined;
+          keepDraft();
           status.textContent = snapshot() === lastSaved ? 'DBに保存しました。' : 'DBに保存しました。追加の変更はもう一度保存してください。';
         } catch {
           status.textContent = '保存結果を確認できませんでした。再試行してください。';
