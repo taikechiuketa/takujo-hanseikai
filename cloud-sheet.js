@@ -104,7 +104,9 @@ async function openCloudSheet(groupId, settingsOnly = false) {
         if (!conflict) status.textContent = keepDraft() ? '未保存の変更があります。' : '未保存です。この端末に下書きを残せませんでした。';
       };
       status.textContent = restore ? 'この端末の下書きを復元しました。' : 'セットの保存・終了でDBに保存します。';
+      button.hidden = !pending;
       if (conflict) {
+        button.hidden = false;
         status.textContent = 'DBに新しい記録があります。この端末の下書きをダウンロードしてから編集を再開してください。';
         button.textContent = '下書きをダウンロード';
         button.onclick = () => {
@@ -178,6 +180,7 @@ async function openCloudSheet(groupId, settingsOnly = false) {
         }
         keepDraft();
         button.disabled = true;
+        button.hidden = true;
         status.textContent = '保存中…';
         try {
           const { data, error: saveError } = await db.rpc('save_sheet_workspace', pending.payload);
@@ -190,6 +193,7 @@ async function openCloudSheet(groupId, settingsOnly = false) {
             }
             if (saveError.code !== 'FETCH_ERROR' && saveError.code) pending = undefined;
             keepDraft();
+            button.hidden = false;
             status.textContent = '保存できませんでした。入力を確認して再試行してください。';
             return;
           }
@@ -197,8 +201,10 @@ async function openCloudSheet(groupId, settingsOnly = false) {
           lastSaved = pending.snapshot;
           pending = undefined;
           keepDraft();
-          status.textContent = snapshot() === lastSaved ? 'DBに保存しました。' : 'DBに保存しました。追加の変更はもう一度保存してください。';
+          button.hidden = snapshot() === lastSaved;
+          status.textContent = button.hidden ? 'DBに保存しました。' : '先ほどの保存は完了しました。残りの変更を保存してください。';
         } catch {
+          button.hidden = false;
           status.textContent = '保存結果を確認できませんでした。再試行してください。';
         } finally { button.disabled = false; }
       };
