@@ -5,3 +5,5 @@
 `python -m http.server 8000` を実行し、ブラウザで http://localhost:8000/ を開く。
 
 [画面説明](docs/screen-guide.md) · [仕様書](docs/specification.md)
+
+運営者向けの利用状況画面を追加しました。
