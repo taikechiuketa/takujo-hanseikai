@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>卓上反省会｜グループ管理</title>
+<style>
+*{box-sizing:border-box}body{font:1rem system-ui,sans-serif;background:#eef2f7;color:#182337;margin:0}main{max-width:42rem;margin:auto;padding:1rem}section{background:white;border-radius:1rem;padding:1rem;margin:1rem 0}label{display:block;margin:.7rem 0}input,select,textarea,button{font:inherit;padding:.6rem;border:1px solid #8492a5;border-radius:.4rem}input,textarea{width:100%}button{background:#254db6;color:white;cursor:pointer;margin:.25rem}li{margin:.5rem 0}button:disabled{opacity:.6}
+</style>
+<main>
+<h1>卓上反省会</h1>
+<p id="status" role="status" aria-live="polite"></p>
+<section id="login" hidden>
+<h2>ログイン</h2>
+<form id="auth">
+<label>メールアドレス<input name="email" type="email" autocomplete="email" required></label>
+<label>パスワード<input name="password" type="password" autocomplete="current-password" required></label>
+<button name="action" value="login">ログイン</button>
+<button name="action" value="signup">アカウントを作成</button>
+</form>
+</section>
+<section id="groups" hidden>
+<h2>グループ管理</h2>
+<button id="signout">ログアウト</button>
+<button id="reload">一覧を再読み込み</button>
+<ul id="groupList"></ul>
+<form id="groupForm">
+<h3 id="groupHeading">新しいグループ</h3>
+<label>グループ名<input name="name" required maxlength="60"></label>
+<label>テンプレート<select name="template">
+<option value="standard">標準</option><option value="sanma">三麻</option><option value="yonma">四人麻雀</option>
+</select></label>
+<label>ルール本文<textarea name="rules" maxlength="12000" rows="4"></textarea></label>
+<button>保存</button><button type="button" id="newGroup">新規作成に戻る</button>
+</form>
+</section>
+</main>
+<script type="module" src="./account.js"></script>
+</html>
