@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>利用状況｜卓上反省会</title>
+<link rel="stylesheet" href="./sheet.css">
+<style>
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:8px}
+.kpis div{background:#f3f3f5;padding:12px;border-radius:10px}
+.kpis dt{font-size:12px}.kpis dd{margin:4px 0 0;font-size:22px;font-weight:750}
+.table-scroll{overflow:auto}.table-scroll table{white-space:nowrap}
+#userDetail{width:min(680px,calc(100% - 24px));max-height:85vh;overflow:auto}
+</style>
+<script defer src="./vendor/supabase-2.119.0.js"></script>
+<script defer src="./usage.js?v=1"></script>
+</head>
+<body><main>
+<a href="./account.html">マイグループへ</a>
+<header class="brand-header"><div><h1>利用状況</h1><p>卓上反省会 ／ 運営ダッシュボード</p></div></header>
+<p id="usageStatus" role="status">権限を確認しています…</p>
+<div id="usageDashboard" hidden>
+<section class="card">
+<form id="usageFilters" class="row">
+<label>開始日（日本時間）<input id="usageFrom" type="date" required></label>
+<label>終了日（日本時間）<input id="usageTo" type="date" required></label>
+<button type="submit">集計する</button>
+</form>
+<dl id="usageKpis" class="kpis"></dl>
+</section>
+<section class="card"><h2>初回利用と継続</h2><p class="hint">初回利用は期間内の新規登録者、再利用は期間内に初回対局を終えた卓が対象です。</p><dl id="usageFunnel" class="kpis"></dl><p id="usageRetention"></p></section>
+<section class="card"><h2>週ごとの利用</h2><div class="table-scroll" id="usageWeeks"></div></section>
+<section class="card"><h2>ユーザー別利用状況</h2>
+<label>利用段階<select id="usageStage"><option value="">すべて</option></select></label>
+<p class="hint">セット数と半荘数は選択期間、利用段階と最終対局日は全期間の記録です。</p>
+<div class="table-scroll" id="usageUsers"></div></section>
+<section class="card"><h2>卓別利用状況</h2><div class="table-scroll" id="usageGroups"></div></section>
+</div>
+<dialog id="userDetail" aria-labelledby="userDetailTitle">
+<form method="dialog"><button type="submit" class="secondary">閉じる</button></form>
+<h2 id="userDetailTitle"></h2><p id="userDetailEmail"></p><div id="userDetailGroups" class="table-scroll"></div>
+</dialog>
+</main></body>
+</html>
