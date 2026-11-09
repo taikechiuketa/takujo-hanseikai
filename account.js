@@ -1,7 +1,7 @@
 const el = id => document.getElementById(id);
 const message = value => { el('status').textContent = value; };
 async function start() {
-  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const { createClient } = window.supabase;
   const db = createClient(
     'https://aexmoblpehhcqptvagxh.supabase.co',
     'sb_publishable_USpY-tMqtrFiUCK_ISwqjw_F0z2r1ha',
@@ -106,4 +106,7 @@ async function start() {
   });
 }
 
-start().catch(() => message('ログイン機能を読み込めませんでした。通信環境を確認して再読み込みしてください。'));
+start().catch(error => {
+  console.error('Account initialization failed', error);
+  message('ログイン画面を初期化できませんでした。ページを再読み込みしてください。');
+});
