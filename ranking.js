@@ -55,6 +55,30 @@ async function showSharedRanking() {
     wrapper.append(grid);
     parent.append(wrapper);
   }
+  function trendChart(parent, title, values, dates) {
+    if (values.length < 2) return;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const figure = element('figure');
+    figure.className = 'player-trend';
+    figure.append(element('figcaption', title + '　' + formatted('', values.at(-1))));
+    const svgNode = (tag, attrs, text) => {
+      const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+      if (text !== undefined) node.textContent = text;
+      return node;
+    };
+    const svg = svgNode('svg', {viewBox:'0 0 324 124',role:'img','aria-label':title});
+    const path = values.map((value, i) => (52 + i * 256 / (values.length - 1)) + ',' +
+      (max === min ? 56 : 100 - (value - min) * 88 / (max - min))).join(' ');
+    svg.append(svgNode('polyline', {points:path,fill:'none',stroke:'var(--accent)','stroke-width':2.5}),
+      svgNode('text', {x:2,y:15,'font-size':10}, formatted('',max)),
+      svgNode('text', {x:2,y:104,'font-size':10}, formatted('',min)),
+      svgNode('text', {x:52,y:118,'font-size':9}, dates[0]),
+      svgNode('text', {x:308,y:118,'text-anchor':'end','font-size':9}, dates.at(-1)));
+    figure.append(svg);
+    parent.append(figure);
+  }
   function metrics(parent, values, fields) {
     const grid = element('table');
     grid.className = 'history-table';
@@ -120,36 +144,40 @@ async function showSharedRanking() {
     const showRank = rows.some(row => Object.hasOwn(row, 'rank'));
     const columns = {
       name:'プレイヤー', ...(showRank ? {rank:'順位'} : {}), ...(section === 'personal' ? {} : fields),
-      ...(section === 'rating' && selected.includes('trend') ? {trend:'レート推移'} : {}),
+
     };
+    const ratingTrend = element('div');
     table(content, rows, columns, {
       id: section === 'rating' ? 'ratingTable' : 'statsTable',
       renderCell(cell, key, row) {
         if (key === 'name') {
           const personalRows = data.personal?.filter(player => player.name === row.name) ?? [];
-          if (!personalRows.length) return false;
+          const hasTrend = section === 'rating' && row.trend?.length;
+          if (!personalRows.length && !hasTrend) return false;
           const link = element('button', row.name);
           link.type = 'button';
           link.className = 'player-stats-link';
-          link.setAttribute('aria-label', row.name + 'の個人成績を開く');
+          link.setAttribute('aria-label', row.name + (personalRows.length ? 'の個人成績を開く' : 'のレート推移を見る'));
           const arrow = element('span', ' ›');
           arrow.setAttribute('aria-hidden', 'true');
           link.append(arrow);
-          link.onclick = () => openPersonal(data, row.name, personalRows);
+          link.onclick = () => {
+            if (hasTrend) {
+              ratingTrend.replaceChildren();
+              const values = row.trend.map(point => point.rating);
+              if (row.trend[0].before != null) values.unshift(row.trend[0].before);
+              else if (values.length === 1) values.unshift(values[0]);
+              trendChart(ratingTrend, row.name + 'のR推移', values, row.trend.map(point => point.date));
+            }
+            if (personalRows.length) openPersonal(data, row.name, personalRows);
+          };
           cell.append(link);
-          return true;
-        }
-        if (key === 'trend' && row.trend?.length) {
-          const detail = element('details');
-          detail.className = 'score-reference';
-          detail.append(element('summary', '推移を見る'));
-          table(detail, row.trend, {date:'対局日',rating:'レート'});
-          cell.append(detail);
           return true;
         }
         return false;
       },
     });
+    if (section === 'rating') content.append(ratingTrend);
   }
   function openPersonal(data, name, rows) {
     const dialog = el('playerStatsDialog');
@@ -173,6 +201,17 @@ async function showSharedRanking() {
         detail.className = 'score-reference';
         if (row.opponents.length) table(detail, row.opponents, {name:'相手', ...opponentFields});
         if (!row.opponents.length) detail.append(element('p', '該当する対戦相手はいません。'));
+        card.append(detail);
+      }
+      if (row.progress?.length) {
+        const detail = element('details');
+        detail.className = 'score-reference';
+        detail.append(element('summary', '推移'));
+        for (const key of ['points','chips','balance']) {
+          if (!Object.hasOwn(row.progress[0], key)) continue;
+          trendChart(detail, fields[key], [0, ...row.progress.map(point => point[key])],
+            row.progress.map(point => point.date));
+        }
         card.append(detail);
       }
       body.append(card);
