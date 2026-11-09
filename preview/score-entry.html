@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f5f0">
+<title>対局入力の試作｜卓上反省会</title>
+<style>
+:root{color-scheme:light;--bg:#f6f5f0;--paper:#fffefa;--ink:#172621;--muted:#56665e;--green:#17634e;--line:#d9e1d9;--soft:#e9f0ea;--red:#b42318;font:16px/1.5 system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}main,.dock-inner{max-width:680px;margin:auto;padding-inline:clamp(12px,4vw,24px)}main{padding-bottom:120px}h1,h2,p{margin:0}button,input{font:inherit}button,a,input,summary{touch-action:manipulation}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--green);outline-offset:2px}button:disabled{opacity:.55;cursor:default}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);gap:8px}.mark{display:flex;align-items:center;gap:8px;font-weight:800;font-size:.91rem}.tile{display:grid;place-items:center;width:25px;height:29px;background:var(--green);color:#f4d8a2;border-radius:5px;border-bottom:3px solid #104635;font-size:.77rem}.badge{background:#eee5d3;color:#634c26;border-radius:99px;padding:3px 9px;font-size:.72rem;font-weight:700}
+.heading{padding:22px 0 16px}.eyebrow{font-size:.7rem;letter-spacing:.11em;font-weight:800;color:var(--green)}h1{font-size:clamp(1.65rem,6vw,2.4rem);letter-spacing:.02em;line-height:1.2;margin:4px 0 8px}.meta{font-size:.83rem;color:var(--muted)}.small{font-size:.78rem;color:var(--muted)}
+.worksheet{background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden}.section-title{display:flex;justify-content:space-between;align-items:center;padding:14px 12px;gap:8px}h2{font-size:1.06rem}.count{font-size:.73rem;color:var(--green);background:var(--soft);border-radius:99px;padding:4px 8px;white-space:nowrap}
+table{width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums}th,td{text-align:center;padding:6px 3px;border-bottom:1px solid var(--line)}th:first-child{width:47px}thead th{background:var(--soft);font-size:.81rem;padding-block:9px}tbody th,tfoot th{font-size:.77rem;color:var(--muted)}tfoot{background:#f1f5ee;font-weight:800}tfoot td{padding-block:10px;border:0}tfoot th{border:0}td input{width:100%;min-width:0;min-height:44px;padding:4px 1px;border:1px solid var(--line);border-radius:7px;background:var(--paper);color:var(--ink);text-align:center;font-weight:700;font-variant-numeric:tabular-nums;font-size:1rem}td input::placeholder{color:#727d74;font-weight:400}.negative{color:var(--red)}td input.negative{color:var(--red)}.row-warning th{color:var(--red)}
+.add{display:block;width:calc(100% - 24px);margin:10px 12px;min-height:44px;border:1px dashed #a7bcae;border-radius:9px;background:transparent;color:var(--green);font-weight:750}.table-note{padding:0 12px 12px}.reference{margin-top:14px;border-bottom:1px solid var(--line)}summary{padding:11px 0;font-size:.88rem;font-weight:700;cursor:pointer}.reference p{padding-bottom:12px}
+.dock{position:fixed;inset:auto 0 0;background:var(--paper);border-top:1px solid var(--line);padding:8px 0 max(10px,env(safe-area-inset-bottom));z-index:2}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions button,.restart{min-height:46px;border-radius:9px;border:1px solid var(--line);font-weight:800}.primary{background:var(--green);color:white}.secondary,.restart{background:var(--paper);color:var(--green)}#feedback{min-height:20px;margin-bottom:4px;font-size:.75rem;color:var(--muted)}#feedback.warning{color:var(--red)}
+.preview-note{margin-top:16px}.preview-note a{color:var(--green)}.restart{padding:0 12px;margin-top:8px}[hidden]{display:none!important}
+@media(max-width:600px){body:has(td input:focus) .dock{display:none}}
+</style>
+</head>
+<body>
+<main>
+<header class="top"><div class="mark"><span class="tile" aria-hidden="true">卓</span>卓上反省会</div><span class="badge">操作デモ</span></header>
+<div class="heading">
+<p class="eyebrow">対局入力</p>
+<h1>金曜の雀卓</h1>
+<p class="meta">2026/11/10　伝票 #01　・　四人麻雀</p>
+</div>
+<section class="worksheet" aria-labelledby="sheetTitle">
+<div class="section-title"><h2 id="sheetTitle">スコアシート</h2><span class="count" id="roundCount"></span></div>
+<table>
+<thead><tr><th scope="col">半荘</th><th scope="col">あおい</th><th scope="col">まこと</th><th scope="col">れん</th><th scope="col">ひなた</th></tr></thead>
+<tbody id="rounds"></tbody>
+<tfoot><tr><th scope="row">合計</th><td></td><td></td><td></td><td></td></tr></tfoot>
+</table>
+<button class="add" id="addRound" type="button">＋ 半荘を追加</button>
+<p class="small table-note">点数を入力すると、合計がその場で変わります。</p>
+</section>
+<details class="reference"><summary>ルール・点数表</summary><p class="small">この試作は四人麻雀の入力サンプルです。半荘ごとの合計が0になるように記録します。</p></details>
+<p class="small preview-note">架空の卓で試せます。<a href="../account.html">現行の卓上反省会</a></p>
+<button id="restart" class="restart" type="button" hidden>デモをリセット</button>
+</main>
+<footer class="dock"><div class="dock-inner">
+<p id="feedback" role="status">半荘を追加して点数を入力できます。</p>
+<div class="actions"><button id="save" class="primary" type="button">セットを保存</button><button id="finish" class="secondary" type="button">セットを終了</button></div>
+</div></footer>
+<script>
+const byId = id => document.getElementById(id);
+const names = ['あおい', 'まこと', 'れん', 'ひなた'];
+const rows = byId('rounds');
+const feedback = byId('feedback');
+const totals = document.querySelectorAll('tfoot td');
+function status(message, warning = false) {
+  feedback.textContent = message;
+  feedback.classList.toggle('warning', warning);
+}
+function updateTotals() {
+  const points = names.map(() => 0);
+  for (const row of rows.rows) {
+    const inputs = [...row.querySelectorAll('input')];
+    inputs.forEach((input, i) => {
+      const value = Number(input.value);
+      input.classList.toggle('negative', value < 0);
+      points[i] += value;
+    });
+    row.classList.toggle('row-warning', inputs.every(input => input.value !== '') &&
+      inputs.reduce((sum, input) => sum + Number(input.value), 0) !== 0);
+  }
+  points.forEach((value, i) => {
+    totals[i].textContent = value > 0 ? '+' + value : String(value);
+    totals[i].classList.toggle('negative', value < 0);
+  });
+  byId('roundCount').textContent = rows.rows.length + ' 半荘';
+}
+function addRound(values = []) {
+  const row = rows.insertRow();
+  const number = rows.rows.length;
+  const heading = document.createElement('th');
+  heading.scope = 'row';
+  heading.textContent = '#' + number;
+  row.append(heading);
+  names.forEach((name, i) => {
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.step = '1';
+    input.inputMode = 'text';
+    input.placeholder = '—';
+    input.value = values[i] ?? '';
+    input.setAttribute('aria-label', number + '半荘目 ' + name + 'の点数');
+    row.insertCell().append(input);
+  });
+  updateTotals();
+  return row;
+}
+function complete(finish) {
+  const invalid = [...rows.rows].findIndex(row => {
+    const inputs = [...row.querySelectorAll('input')];
+    return inputs.some(input => !input.value || !Number.isSafeInteger(Number(input.value))) ||
+      inputs.reduce((sum, input) => sum + Number(input.value), 0) !== 0;
+  });
+  if (invalid >= 0) {
+    status((invalid + 1) + '半荘目の点数を確認してください。合計は0点です。', true);
+    return;
+  }
+  status(finish ? 'セットを終了しました（デモ）' : '保存しました（デモ）');
+  if (!finish) return;
+  document.querySelectorAll('td input, .actions button, #addRound').forEach(el => { el.disabled = true; });
+  byId('restart').hidden = false;
+}
+rows.addEventListener('input', () => { updateTotals(); status('未保存の変更があります。'); });
+byId('addRound').onclick = () => {
+  const row = addRound();
+  status('半荘を追加しました。');
+  row.scrollIntoView({ block: 'nearest' });
+};
+byId('save').onclick = () => complete(false);
+byId('finish').onclick = () => complete(true);
+byId('restart').onclick = () => location.reload();
+addRound([42, 8, -16, -34]);
+addRound([-14, 36, 4, -26]);
+</script>
+</body>
+</html>
