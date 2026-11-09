@@ -67,7 +67,7 @@
 :root{background:var(--theme-bg,#f3f3f5);color:var(--theme-text,#171b21)}
 .card,dialog{background:var(--theme-surface,#fff);border-color:var(--theme-border,#e4e4e7)}
 button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f5);color:var(--theme-text,#171b21)}
-</style><script src="./template-groups.js"></script></head><body><main><header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>グループ設定の試作版 · このブラウザに保存</p></div></header>
+</style><script src="./template-groups.js"></script><script src="./vendor/supabase-2.119.0.js" defer></script><script src="./cloud-sheet.js" defer></script></head><body><p id="cloudStatus" role="status" hidden></p><main id="sheetApp" hidden><div id="cloudControls" hidden><a href="./account.html">← グループ一覧</a> <button id="cloudSave" type="button">この卓をDBに保存</button></div><header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>グループ設定の試作版 · このブラウザに保存</p></div></header>
 <section class="card">
   <h2>グループ設定</h2>
   <div class="buttons"><label>グループ <select id="groupPicker"></select></label><button type="button" id="createGroup">新しいグループ</button></div>
@@ -95,15 +95,31 @@ button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f
 <section class="card" id="activeSetSettlement"><h2>チップ・最終精算</h2><p class="hint">チップはセットの最後に増減枚数を入力。精算額＝累計pt×ポイントレート＋チップ枚数×チップレート。</p><div style="overflow:auto"><table class="settle" id="settle"></table></div><p class="warn" id="chipWarning"></p></section>
 <section class="card"><div class="row"><div><h2>データ管理</h2><p class="hint">現在のセットをJSONファイルに書き出し、バックアップや別のブラウザへの移行に使えます。読み込むと現在のセットが置き換わります。プレイヤーマスターとセット履歴は対象外です。</p></div><div class="buttons"><button class="secondary" id="export">JSON保存</button><button class="secondary" id="import">JSON読込</button><input class="hidden" type="file" id="file" accept="application/json,.json"></div></div><hr><p class="hint">全データには入力中のセット・セット履歴・プレイヤーマスターが含まれます。</p><div class="buttons"><button class="secondary" id="backupAll">全データをバックアップ</button><button class="secondary" id="restoreAll">バックアップから復元</button><input class="hidden" type="file" id="backupFile" accept="application/json,.json"></div></section>
 </div><div id="statsPage" hidden><section class="card"><h2>通算成績</h2><div class="buttons"><button type="button" class="secondary" id="exportPublicStats">公開用の成績を書き出す</button><a href="./results.html">閲覧専用ページ</a></div><p class="hint">累計ポイントの高い順。混在セットのチップとその収支は「すべて」に含まれます。</p><div class="stats-filter"><label>集計期間 <select id="statsPeriod"><option value="month">今月</option><option value="previous">前月</option><option value="monthly">月間ランキング</option><option value="year">今年</option><option value="all" selected>全期間</option><option value="range">範囲指定</option></select></label><label id="statsMonthLabel" hidden>対象月 <select id="statsMonth"></select></label><span id="statsRange" hidden><label>開始日 <input type="date" id="statsFrom"></label> <label>終了日 <input type="date" id="statsTo"></label></span></div><div class="navtabs" aria-label="成績表示"><button id="showTotals" class="active" aria-pressed="true">通算成績</button><button id="showRating" aria-pressed="false">レーティング</button></div><div id="ratingPanel" hidden><label>ルール <select id="ratingMode"><option value="all">すべて</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label><p class="hint">全期間の現在R。「すべて」は全ルールの半荘から計算する総合Rです。20半荘未満は暫定です。名前をタップすると個人成績が開き、表の下には選択期間のR推移が表示されます。</p><div class="rating-scroll"><table id="ratingTable" class="history-table"></table></div><div id="ratingTrend"></div></div><div id="totalsPanel" class="standings-scroll"><label>ルール <select id="totalsMode"><option value="all">すべて</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label><table id="statsTable" class="history-table"></table></div><p id="statsNote" class="hint"></p></section><section class="card"><h2>セット履歴</h2><button class="secondary" id="importHistory">雀簿データを追加</button><div class="stats-filter"><label>対局者 <select id="historyPlayer"><option value="">すべて</option></select></label><label>ルール <select id="historyRule"><option value="">すべて</option><option value="normal">三人麻雀</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label></div><div id="historyList"></div></section></div></main><dialog id="masterDialog"><h2 id="masterHeading">プレイヤーを追加</h2><div class="master-list" id="masterList"></div><div class="row" style="margin-top:12px"><input id="newMasterName" placeholder="新しいプレイヤー名" style="flex:1;width:160px"><button id="createMaster">＋ 登録</button></div><div class="modal-actions"><button class="secondary" id="closeMaster">閉じる</button><button id="applyMaster">選択した人を追加</button></div></dialog><dialog id="importHistoryDialog"><h2>雀簿データを追加</h2><label for="historyText">共有ページからコピーした文字、または移行用JSON</label><label>取り込みルール <select id="importRule"><option value="">自動判定（4人打ちは四人三麻）</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label><textarea id="historyText" rows="8" style="width:100%;margin-top:8px"></textarea><div class="modal-actions"><button class="secondary" id="closeHistoryImport">閉じる</button><button id="previewHistoryImport">内容を確認</button></div></dialog><dialog id="playerStatsDialog" aria-labelledby="playerStatsTitle"><h2 id="playerStatsTitle"></h2><p class="hint" id="playerStatsPeriod"></p><div class="navtabs" id="playerStatsTabs" role="tablist" aria-label="ルール"><button type="button" id="playerRuleAll" role="tab" aria-controls="playerStatsResults" data-mode="all">すべて</button><button type="button" id="playerRuleNormal" role="tab" aria-controls="playerStatsResults" data-mode="normal">三麻</button><button type="button" id="playerRuleNorth" role="tab" aria-controls="playerStatsResults" data-mode="north">四人三麻</button><button type="button" id="playerRuleYonma" role="tab" aria-controls="playerStatsResults" data-mode="yonma">四人麻雀</button><button type="button" id="playerRuleTrend" role="tab" aria-controls="playerStatsResults" data-mode="trend">推移グラフ</button></div><div id="playerStatsResults" role="tabpanel"></div><p class="hint" id="playerStatsIncomplete" hidden></p><p class="hint" id="playerStatsChipsNote" hidden>混在セットのチップとその収支は「すべて」で集計します。</p><p class="hint" id="playerRankHint">着順は必要人数の点数がそろった半荘で集計。同点は同順位です。抜け番は対局数に含みません。</p><form method="dialog" class="modal-actions"><button class="secondary">閉じる</button></form></dialog><script>
-const groupPrefix=initTemplateGroups();
-const MASTER_KEY=groupPrefix+'players';let master=[];try{master=JSON.parse(localStorage.getItem(MASTER_KEY))||[]}catch{};if(!Array.isArray(master))master=[];const saveMaster=()=>localStorage.setItem(MASTER_KEY,JSON.stringify(master));const KEY=groupPrefix+'current';const ARCHIVE_KEY=groupPrefix+'history';const today=()=>{const d=new Date();return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`};const archives=()=>{try{return JSON.parse(localStorage.getItem(ARCHIVE_KEY))||[]}catch{return []}};const nextSequence=()=>{const d=today();const used=archives().filter(x=>x.date===d).map(x=>Number(x.sequence)||0);return Math.max(0,...used)+1};const modes=[['normal','三麻'],['north','四人三麻'],['yonma','四人麻雀']];const fresh=(start=false)=>({idle:!start,date:start?today():'',sequence:start?nextSequence():0,rate:100,chipRate:100,players:[],rounds:[]});let editing=null;let state;try{state=JSON.parse(localStorage.getItem(KEY))||fresh()}catch{state=fresh()}if(!state.players||!state.rounds)state=fresh();if(state.rounds.length===1&&state.rounds[0].id==='r1'&&state.players.length===3&&state.players.every((p,i)=>p.id==='p'+(i+1)&&p.name===['たけち','Aさん','Bさん'][i]&&!p.chips)&&Object.values(state.rounds[0].scores).every(score=>score==='')){
+document.addEventListener('DOMContentLoaded', async () => {
+const cloudId=new URLSearchParams(location.search).get('group');
+let cloud;
+if(cloudId){
+  try{cloud=await openCloudSheet(cloudId)}catch(error){
+    const status=document.getElementById('cloudStatus');
+    status.hidden=false;
+    status.textContent=error.message;
+    const link=document.createElement('a');
+    link.href='./account.html';
+    link.textContent='グループ一覧へ';
+    status.after(link);
+    return;
+  }
+}
+const groupPrefix=cloud?'':initTemplateGroups();
+const storage=cloud?.storage||window.localStorage;
+const MASTER_KEY=groupPrefix+'players';let master=[];try{master=JSON.parse(storage.getItem(MASTER_KEY))||[]}catch{};if(!Array.isArray(master))master=[];const saveMaster=()=>storage.setItem(MASTER_KEY,JSON.stringify(master));const KEY=groupPrefix+'current';const ARCHIVE_KEY=groupPrefix+'history';const today=()=>{const d=new Date();return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`};const archives=()=>{try{return JSON.parse(storage.getItem(ARCHIVE_KEY))||[]}catch{return []}};const nextSequence=()=>{const d=today();const used=archives().filter(x=>x.date===d).map(x=>Number(x.sequence)||0);return Math.max(0,...used)+1};const modes=[['normal','三麻'],['north','四人三麻'],['yonma','四人麻雀']];const fresh=(start=false)=>({idle:!start,date:start?today():'',sequence:start?nextSequence():0,rate:100,chipRate:100,players:[],rounds:[]});let editing=null;let state;try{state=JSON.parse(storage.getItem(KEY))||fresh()}catch{state=fresh()}if(!state.players||!state.rounds)state=fresh();if(state.rounds.length===1&&state.rounds[0].id==='r1'&&state.players.length===3&&state.players.every((p,i)=>p.id==='p'+(i+1)&&p.name===['たけち','Aさん','Bさん'][i]&&!p.chips)&&Object.values(state.rounds[0].scores).every(score=>score==='')){
   const used=new Set(archives().flatMap(set=>set.players.map(p=>p.masterId)));
   const sampleIds=new Set(state.players.map(p=>p.masterId).filter(id=>id&&!used.has(id)));
   master=master.filter(player=>!sampleIds.has(player.id));
   state=fresh();
-  localStorage.setItem(KEY,JSON.stringify(state));
+  storage.setItem(KEY,JSON.stringify(state));
 }
-if(!state.idle){if(!state.date){state.date=today();state.sequence=nextSequence()}if(!state.sequence)state.sequence=1;}for(const r of state.rounds){if(r.mode==='half')r.mode='normal'}for(const p of state.players){let m=master.find(x=>x.id===p.masterId);if(!m){m=master.find(x=>x.name===p.name);if(!m){m={id:'m'+Date.now()+Math.random().toString(36).slice(2,7),name:p.name};master.push(m)}p.masterId=m.id}}saveMaster();const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const fmt=n=>(n>0?'+':'')+n.toLocaleString('ja-JP');const value=v=>v===''||v==='skip'?0:Number(v)||0;const save=()=>{if(editing)return;try{localStorage.setItem(KEY,JSON.stringify(state))}catch{alert('保存できませんでした。ブラウザの設定をご確認ください。')}};const uid=()=>String(Date.now())+Math.random().toString(36).slice(2,7);function totals(){return Object.fromEntries(state.players.map(p=>[p.id,state.rounds.reduce((s,r)=>s+value(r.scores[p.id]),0)]))}function render(){
+if(!state.idle){if(!state.date){state.date=today();state.sequence=nextSequence()}if(!state.sequence)state.sequence=1;}for(const r of state.rounds){if(r.mode==='half')r.mode='normal'}for(const p of state.players){let m=master.find(x=>x.id===p.masterId);if(!m){m=master.find(x=>x.name===p.name);if(!m){m={id:'m'+Date.now()+Math.random().toString(36).slice(2,7),name:p.name};master.push(m)}p.masterId=m.id}}saveMaster();const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const fmt=n=>(n>0?'+':'')+n.toLocaleString('ja-JP');const value=v=>v===''||v==='skip'?0:Number(v)||0;const save=()=>{if(editing)return;try{storage.setItem(KEY,JSON.stringify(state))}catch{alert('保存できませんでした。ブラウザの設定をご確認ください。')}};const uid=()=>String(Date.now())+Math.random().toString(36).slice(2,7);function totals(){return Object.fromEntries(state.players.map(p=>[p.id,state.rounds.reduce((s,r)=>s+value(r.scores[p.id]),0)]))}function render(){
   const idle=state.idle===true;
   for(const id of ['saveSet','export','activeSetSettings','activeSetRounds','activeSetSettlement'])$(id).hidden=idle;
   $('finishSet').hidden=idle||Boolean(editing);
@@ -203,7 +219,7 @@ function archiveCurrent(){
   if(index===-1)history.push(snapshot);
   else history[index]=snapshot;
   try{
-    localStorage.setItem(ARCHIVE_KEY,JSON.stringify(history));
+    storage.setItem(ARCHIVE_KEY,JSON.stringify(history));
 
   }catch{
     alert('セット履歴に保存できませんでした。');
@@ -251,7 +267,7 @@ $('finishSet').onclick=()=>{
   if(!archiveCurrent())return;
   const idle={idle:true,date:'',sequence:0,rate:state.rate,chipRate:state.chipRate,players:[],rounds:[]};
   try{
-    localStorage.setItem(KEY,JSON.stringify(idle));
+    storage.setItem(KEY,JSON.stringify(idle));
   }catch{
     $('saveStatus').textContent='履歴には保存しましたが、セットを終了できませんでした。';
     return;
@@ -270,7 +286,7 @@ $('saveSet').onclick=()=>{
     }
     history[editing.index]=state;
     try{
-      localStorage.setItem(ARCHIVE_KEY,JSON.stringify(history));
+      storage.setItem(ARCHIVE_KEY,JSON.stringify(history));
 
     }catch{
       alert('セット履歴に保存できませんでした。');
@@ -303,9 +319,9 @@ function backfillImportedPlayers(){
     }
   }
   if(!changed)return;
-  localStorage.setItem(MASTER_KEY,JSON.stringify(registry));
+  storage.setItem(MASTER_KEY,JSON.stringify(registry));
   master=registry;
-  localStorage.setItem(ARCHIVE_KEY,JSON.stringify(history));
+  storage.setItem(ARCHIVE_KEY,JSON.stringify(history));
 }
 function parseJanboText(raw){
   const lines=raw.split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
@@ -382,9 +398,9 @@ $('previewHistoryImport').onclick=()=>{
   const rounds=scores.map(row=>({id:uid(),mode,scores:Object.fromEntries(players.map((player,i)=>[player.id,row[i]]))}));
   history.push({date,sequence,players,rounds,rate,chipRate,importKey:key});
   try{
-    localStorage.setItem(MASTER_KEY,JSON.stringify(registry));
+    storage.setItem(MASTER_KEY,JSON.stringify(registry));
     master=registry;
-    localStorage.setItem(ARCHIVE_KEY,JSON.stringify(history));
+    storage.setItem(ARCHIVE_KEY,JSON.stringify(history));
 
   }catch{
     alert('セット履歴に保存できませんでした。');
@@ -514,17 +530,17 @@ function validateBackup(backup){
 }
 function storeBackup(backup){
   const entries=[[KEY,backup.current],[ARCHIVE_KEY,backup.history],[MASTER_KEY,backup.master]]
-    .map(([key,data])=>[key,JSON.stringify(data),localStorage.getItem(key)]);
+    .map(([key,data])=>[key,JSON.stringify(data),storage.getItem(key)]);
   let written=0;
   try{
     for(const [key,data] of entries){
-      localStorage.setItem(key,data);
+      storage.setItem(key,data);
       written++;
     }
   }catch(error){
     for(const [key,,previous] of entries.slice(0,written).reverse()){
-      if(previous===null)localStorage.removeItem(key);
-      else localStorage.setItem(key,previous);
+      if(previous===null)storage.removeItem(key);
+      else storage.setItem(key,previous);
     }
     throw error;
   }
@@ -676,7 +692,7 @@ function renderStats(){
     if(!confirm(`${displayed.date} - ${displayed.sequence||1} のセット（全${displayed.rounds.length}半荘）を削除しますか？`))return;
     saved.splice(index,1);
     try{
-      localStorage.setItem(ARCHIVE_KEY,JSON.stringify(saved));
+      storage.setItem(ARCHIVE_KEY,JSON.stringify(saved));
 
     }catch{
       alert('セット履歴に保存できませんでした。');
@@ -950,4 +966,7 @@ function switchPage(page){const stats=page==='stats';$('sheetPage').hidden=stats
 $('tabSheet').onclick=()=>switchPage('sheet');$('tabStats').onclick=()=>switchPage('stats');$('statsPeriod').onchange=$('statsMonth').onchange=$('totalsMode').onchange=renderStats;
 try{backfillImportedPlayers()}catch{alert("雀簿のプレイヤーマスターを更新できませんでした。")}
 
+if(cloud)cloud.connect({ current:KEY, history:ARCHIVE_KEY, master:MASTER_KEY });
+$('sheetApp').hidden=false;
+});
 </script></body></html>

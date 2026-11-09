@@ -46,7 +46,7 @@ async function start() {
       };
       const play = document.createElement('a');
       play.textContent = '対局を入力';
-      play.href = './game.html?' + new URLSearchParams({ group: group.id });
+      play.href = './index.html?' + new URLSearchParams({ group: group.id });
       button.textContent = group.name + 'の設定';
       item.append(button, ' ', play);
       el('groupList').append(item);
