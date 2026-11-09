@@ -20,6 +20,7 @@ async function showSharedRanking() {
   const content = el('rankingContent');
   const navigation = el('rankingNavigation');
   let activeSection;
+  let personalRequest = 0;
   function element(tag, text) {
     const node = document.createElement(tag);
     if (text !== undefined) node.textContent = text;
@@ -147,7 +148,7 @@ async function showSharedRanking() {
               }));
               ratingTrend.innerHTML = rankingCharts.rating(row.name, points);
             }
-            if (personalRows.length) openPersonal(data, row.name, personalRows);
+            if (personalRows.length) openPersonal(data, row.name, personalRows, section === 'rating' ? mode.value : 'all');
           };
           cell.append(link);
           return true;
@@ -157,21 +158,20 @@ async function showSharedRanking() {
     });
     if (section === 'rating') content.append(ratingTrend);
   }
-  function openPersonal(data, name, rows) {
-    const dialog = el('playerStatsDialog');
-    const body = el('playerStatsResults');
-    el('playerStatsTitle').textContent = name + 'の個人成績';
-    const caption = element('p', filterCaption());
-    caption.className = 'hint';
-    body.replaceChildren(caption);
+  function renderPersonal(body, data, rows, trend) {
+    body.replaceChildren();
+    if (!rows.length) {
+      body.append(element('p', 'この条件の成績はまだありません。'));
+      return;
+    }
     if (rows.length > 1) body.append(element('p', '同じ表示名の選手が複数います。'));
     const fields = Object.fromEntries(Object.entries(rankingFields.personal)
       .filter(([key]) => data.options.personal.includes(key) && key !== 'opponents'));
     rows.forEach((row, index) => {
       const card = element('article');
       if (rows.length > 1) card.append(element('h3', '同名の選手 ' + (index + 1)));
-      if (Object.keys(fields).length) metrics(card, row, fields);
-      if (Array.isArray(row.opponents)) {
+      if (!trend && Object.keys(fields).length) metrics(card, row, fields);
+      if (!trend && Array.isArray(row.opponents)) {
         const detail = element('details');
         detail.append(element('summary', '対戦相手別成績'));
         const opponentFields = {rounds:'同卓数',wins:'勝',losses:'負',ties:'分',winRate:'勝率',
@@ -181,10 +181,8 @@ async function showSharedRanking() {
         if (!row.opponents.length) detail.append(element('p', '該当する対戦相手はいません。'));
         card.append(detail);
       }
-      if (row.progress?.length) {
-        const detail = element('details');
-        detail.className = 'score-reference';
-        detail.append(element('summary', '推移'));
+      if (trend && row.progress?.length) {
+        const detail = element('div');
         const hint = element('p', '全ルールのセットごとの累計。選択期間の開始時点を0として表示します。');
         hint.className = 'hint';
         detail.append(hint);
@@ -195,9 +193,62 @@ async function showSharedRanking() {
         }
         card.append(detail);
       }
+      if (trend && !row.progress?.length) card.append(element('p', 'この期間の推移データはありません。'));
       body.append(card);
     });
+  }
+  function openPersonal(data, name, rows, initialMode) {
+    const dialog = el('playerStatsDialog');
+    const body = el('playerStatsResults');
+    const nav = el('playerStatsTabs');
+    const tabs = [...nav.querySelectorAll('button')];
+    const month = period.value;
+    const datasets = new Map([[mode.value, Promise.resolve({data, rows})]]);
+    el('playerStatsTitle').textContent = name + 'の個人成績';
+    tabs.find(tab => tab.dataset.mode === 'trend').hidden =
+      !data.options.personal.some(key => ['points','chips','balance'].includes(key));
+    async function select(tab) {
+      const current = ++personalRequest;
+      const target = tab.dataset.mode === 'trend' ? 'all' : tab.dataset.mode;
+      for (const item of tabs) {
+        const active = item === tab;
+        item.classList.toggle('active', active);
+        item.setAttribute('aria-selected', String(active));
+        item.tabIndex = active ? 0 : -1;
+      }
+      body.setAttribute('aria-labelledby', tab.id);
+      el('playerStatsPeriod').textContent = period.selectedOptions[0].textContent + ' ・ ' + tab.textContent;
+      if (!datasets.has(target)) {
+        datasets.set(target, (async () => {
+          const response = await db.rpc('get_shared_group_stats', {
+            share_token: token, target_month: month ? month + '-01' : null, target_mode: target,
+          });
+          if (response.error) throw response.error;
+          return {data:response.data, rows:response.data?.personal?.filter(player => player.name === name) ?? []};
+        })());
+      }
+      body.textContent = '成績を読み込み中…';
+      try {
+        const result = await datasets.get(target);
+        if (current === personalRequest && dialog.open) renderPersonal(body, result.data, result.rows, tab.dataset.mode === 'trend');
+      } catch {
+        datasets.delete(target);
+        if (current === personalRequest && dialog.open) body.textContent = '成績を取得できませんでした。もう一度タブを選んでください。';
+      }
+    }
+    for (const tab of tabs) tab.onclick = () => select(tab);
+    nav.onkeydown = event => {
+      const visible = tabs.filter(tab => !tab.hidden);
+      const index = visible.indexOf(event.target);
+      const next = {ArrowLeft:index-1,ArrowRight:index+1,Home:0,End:visible.length-1}[event.key];
+      if (index < 0 || next === undefined) return;
+      event.preventDefault();
+      const tab = visible[(next+visible.length)%visible.length];
+      tab.focus();
+      select(tab);
+    };
     dialog.showModal();
+    select(tabs.find(tab => tab.dataset.mode === initialMode) || tabs[0]);
   }
   async function refresh(month) {
     period.disabled = mode.disabled = true;

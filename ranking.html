@@ -9,7 +9,7 @@
 <script defer src="./vendor/supabase-2.119.0.js"></script>
 <script defer src="./ranking-options.js"></script>
 <script defer src="./ranking-charts.js?v=1"></script>
-<script defer src="./ranking.js?v=shared-charts-2"></script>
+<script defer src="./ranking.js?v=player-tabs-1"></script>
 </head>
 <body><main>
 <header class="brand-header"><div><h1 id="rankingTitle">卓上反省会</h1><p>卓上反省会 ／ 公開成績</p></div></header>
@@ -25,6 +25,8 @@
 <dialog id="playerStatsDialog" aria-labelledby="playerStatsTitle">
 <form method="dialog"><button type="submit" class="secondary">閉じる</button></form>
 <h2 id="playerStatsTitle"></h2>
-<div id="playerStatsResults"></div>
+<p class="hint" id="playerStatsPeriod"></p>
+<div class="navtabs" id="playerStatsTabs" role="tablist" aria-label="ルール"><button type="button" id="playerRuleAll" role="tab" aria-controls="playerStatsResults" data-mode="all">すべて</button><button type="button" id="playerRuleNormal" role="tab" aria-controls="playerStatsResults" data-mode="normal">三麻</button><button type="button" id="playerRuleNorth" role="tab" aria-controls="playerStatsResults" data-mode="north">四人三麻</button><button type="button" id="playerRuleYonma" role="tab" aria-controls="playerStatsResults" data-mode="yonma">四人麻雀</button><button type="button" id="playerRuleTrend" role="tab" aria-controls="playerStatsResults" data-mode="trend">推移グラフ</button></div>
+<div id="playerStatsResults" role="tabpanel"></div>
 </dialog>
 </main></body></html>
