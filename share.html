@@ -7,7 +7,12 @@
 <title>セット結果｜卓上反省会</title>
 <link rel="stylesheet" href="./sheet.css">
 <script defer src="./vendor/supabase-2.119.0.js"></script>
-<script defer src="./share.js"></script>
+<script defer src="./share.js?v=settlement-1"></script>
+<style>
+#shareResults .sheet-wrap{max-height:none;margin-bottom:14px}
+#shareResults .history-table{margin:0;white-space:nowrap}
+#shareResults .history-table th[scope="row"]{text-align:left}
+</style>
 </head>
 <body><main>
 <header class="brand-header"><div><h1>卓上反省会</h1><p>セット結果</p></div></header>
@@ -15,7 +20,11 @@
 <section id="shareResults" class="card" hidden>
 <h2 id="shareTitle"></h2>
 <p id="shareDate"></p>
-<div id="shareRanking"></div>
-<details><summary>半荘別の結果</summary><div id="shareRounds"></div></details>
+<p id="shareRates" class="hint"></p>
+<div id="shareRanking" class="sheet-wrap"></div>
+<h2>半荘別スコア</h2>
+<div id="shareRounds" class="sheet-wrap"></div>
+<button id="copyShareLink" type="button" class="secondary">共有リンクをコピー</button>
+<p id="copyShareStatus" class="hint" role="status"></p>
 </section>
 </main></body></html>
