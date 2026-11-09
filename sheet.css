@@ -76,3 +76,9 @@ button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f
 #saveToast{position:fixed;z-index:100;bottom:max(1rem,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 2rem);padding:.8rem 1rem;border-radius:12px;background:#172322;color:#fff;box-shadow:0 4px 18px #0005;pointer-events:none}
 
 .navtabs[hidden]{display:none}
+
+#cloudStatus:empty{display:none}
+.back-link{display:inline-flex;align-items:center;gap:.5rem;min-height:44px;padding:0 .9rem 0 .65rem;border:1px solid var(--theme-border,#d9e0df);border-radius:10px;background:var(--theme-surface,#fff);color:var(--theme-text,#172322);font-weight:650;text-decoration:none}
+.back-link span{font-size:1.45rem;line-height:1;color:var(--accent)}
+.back-link:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+#cloudControls:not([hidden]){margin-bottom:.75rem}

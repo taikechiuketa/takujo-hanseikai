@@ -110,7 +110,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
       changed = () => {
         if (!conflict) status.textContent = keepDraft() ? '未保存の変更があります。' : '未保存です。この端末に下書きを残せませんでした。';
       };
-      status.textContent = restore ? 'この端末の下書きを復元しました。' : 'セットの保存・終了でDBに保存します。';
+      status.textContent = restore ? 'この端末の下書きを復元しました。' : '';
       button.hidden = !pending;
       if (conflict) {
         button.hidden = false;
