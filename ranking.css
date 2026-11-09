@@ -1,0 +1,24 @@
+.public-ranking{background:#eef2f1;color:#182b27}
+.public-ranking main{max-width:920px;padding:16px 14px 48px}
+.public-ranking .brand-header{background:#142e29;color:#f4fbf8;border-radius:20px;padding:22px;margin:0 0 16px}
+.public-ranking .brand-header h1{color:inherit;overflow-wrap:anywhere;font-size:clamp(24px,5vw,36px)}
+.public-ranking .brand-header p{color:#bfd8cd;margin:5px 0 0}
+.ranking-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;background:white;border-radius:14px;padding:12px}
+.ranking-filters select{width:100%;min-height:44px}
+#rankingNavigation:not([hidden]){display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+#rankingNavigation button{flex:1 1 auto;min-height:44px;background:#fff;color:#24463e;border:1px solid #b9cbc4}
+#rankingNavigation button[aria-pressed=true]{background:#145345;color:white;border-color:#145345}
+.ranking-heading{margin:20px 0 10px;font-size:20px}
+.ranking-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px;align-items:start}
+.ranking-player{min-width:0;background:#fff;border:1px solid #d6e1dd;border-radius:16px;padding:14px}
+.ranking-player h3{display:flex;align-items:center;gap:8px;margin:0;overflow-wrap:anywhere;font-size:17px}
+.ranking-position{flex:none;background:#e2f2eb;color:#1b5546;border-radius:7px;padding:4px 8px;font-size:12px}
+.ranking-highlight{display:flex;align-items:baseline;gap:6px;margin:8px 0;color:#155345}
+.ranking-highlight strong{font-size:28px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ranking-highlight span{font-size:12px}
+.ranking-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 0}
+.ranking-metrics div{min-width:0;background:#f1f6f4;border-radius:8px;padding:7px 9px}
+.ranking-metrics dt{font-size:12px;color:#46615a}
+.ranking-metrics dd{margin:3px 0 0;font-size:15px;font-weight:650;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ranking-player details{margin-top:12px;border-top:1px solid #d6e1dd}
+.ranking-player summary{cursor:pointer;padding:12px 0;color:#155345;font-weight:650}

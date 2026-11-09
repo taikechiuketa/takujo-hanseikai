@@ -8,14 +8,18 @@
 <link rel="stylesheet" href="./sheet.css">
 <script defer src="./vendor/supabase-2.119.0.js"></script>
 <script defer src="./ranking-options.js"></script>
-<script defer src="./ranking.js?v=options-1"></script>
+<link rel="stylesheet" href="./ranking.css?v=cards-1">
+<script defer src="./ranking.js?v=cards-1"></script>
 </head>
-<body><main>
-<header class="brand-header"><div><h1 id="rankingTitle">卓上反省会</h1><p>卓ランキング</p></div></header>
+<body class="public-ranking"><main>
+<header class="brand-header"><div><h1 id="rankingTitle">卓上反省会</h1><p>卓上反省会 ／ 公開成績</p></div></header>
 <p id="rankingStatus" role="status">成績を読み込み中…</p>
-<section id="rankingPanel" class="card" hidden>
+<section id="rankingPanel" hidden>
+<div class="ranking-filters">
 <label>集計期間 <select id="rankingPeriod"></select></label>
 <label>ルール <select id="rankingMode"><option value="all">すべて</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四麻</option></select></label>
+</div>
+<nav id="rankingNavigation" aria-label="成績の種類"></nav>
 <div id="rankingContent"></div>
 </section>
 </main></body></html>

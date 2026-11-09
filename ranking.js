@@ -18,6 +18,8 @@ async function showSharedRanking() {
   }).format(new Date());
   const mode = el('rankingMode');
   const content = el('rankingContent');
+  const navigation = el('rankingNavigation');
+  let activeSection;
   function element(tag, text) {
     const node = document.createElement(tag);
     if (text !== undefined) node.textContent = text;
@@ -52,49 +54,105 @@ async function showSharedRanking() {
     wrapper.append(grid);
     parent.append(wrapper);
   }
-  function render(data) {
-    content.replaceChildren();
-    for (const [section, label] of Object.entries(rankingSections)) {
-      if (!Array.isArray(data[section])) continue;
-      const rows = data[section];
-      const fields = Object.fromEntries(Object.entries(rankingFields[section])
-        .filter(([key]) => data.options[section].includes(key) && !['trend','opponents'].includes(key)));
-      content.append(element('h2', label));
-      if (!rows.length) {
-        content.append(element('p', 'この条件の成績はまだありません。'));
-        continue;
-      }
-      if (section !== 'personal') {
-        table(content, rows, {
-          ...(Object.hasOwn(rows[0], 'rank') ? {rank:'順位'} : {}), name:'プレイヤー', ...fields,
-        });
-        if (section === 'rating' && data.options.rating.includes('trend')) {
-          for (const row of rows) {
-            if (!row.trend?.length) continue;
-            const detail = element('details');
-            detail.append(element('summary', row.name + 'のレート推移'));
-            table(detail, row.trend, {date:'対局日',rating:'レート'});
-            content.append(detail);
-          }
-        }
-      } else {
-        for (const row of rows) {
-          const detail = element('details');
-          detail.append(element('summary', row.name));
-          if (Object.keys(fields).length) table(detail, [row], fields);
-          if (Array.isArray(row.opponents)) {
-            detail.append(element('h3', '対戦相手別成績'));
-            table(detail, row.opponents, {name:'相手',rounds:'同卓数',wins:'勝',losses:'負',ties:'分',winRate:'勝率',
-              ...(Object.hasOwn(fields, 'averagePoints') ? {averagePoints:'自分の平均pt'} : {})});
-          }
-          content.append(detail);
-        }
-      }
+  function metrics(parent, values, fields) {
+    const list = element('dl');
+    list.className = 'ranking-metrics';
+    for (const [key, label] of Object.entries(fields)) {
+      const metric = element('div');
+      const value = element('dd', formatted(key, values[key]));
+      if (typeof values[key] === 'number' && values[key] < 0) value.classList.add('negative');
+      metric.append(element('dt', label), value);
+      list.append(metric);
     }
-    if (!content.childElementCount) content.append(element('p', '公開されている成績項目はありません。'));
+    parent.append(list);
+  }
+  function render(data) {
+    const sections = Object.keys(rankingSections).filter(key => Array.isArray(data[key]));
+    if (!sections.includes(activeSection)) activeSection = sections[0];
+    navigation.replaceChildren();
+    navigation.hidden = sections.length < 2;
+    const buttons = sections.map(section => {
+      const button = element('button', rankingSections[section]);
+      button.type = 'button';
+      button.setAttribute('aria-pressed', String(section === activeSection));
+      button.setAttribute('aria-controls', 'rankingContent');
+      button.onclick = () => {
+        activeSection = section;
+        for (const item of navigation.children) item.setAttribute('aria-pressed', String(item === button));
+        renderSection(data, section);
+      };
+      return button;
+    });
+    navigation.append(...buttons);
+    renderSection(data, activeSection);
+  }
+  function renderSection(data, section) {
+    content.replaceChildren();
+    if (!section) {
+      content.append(element('p', '公開されている成績項目はありません。'));
+      return;
+    }
+    const rows = data[section];
+    const selected = data.options[section];
+    const fields = Object.fromEntries(Object.entries(rankingFields[section])
+      .filter(([key]) => selected.includes(key) && !['trend','opponents'].includes(key)));
+    const heading = element('h2', rankingSections[section]);
+    heading.className = 'ranking-heading';
+    content.append(heading);
+    if (!rows.length) {
+      content.append(element('p', 'この条件の成績はまだありません。'));
+      return;
+    }
+    const cards = element('div');
+    cards.className = 'ranking-cards';
+    for (const row of rows) {
+      const card = element('article');
+      card.className = 'ranking-player';
+      const title = element('h3');
+      if (Object.hasOwn(row, 'rank') || (section === 'rating' && selected.includes('rating'))) {
+        const badge = element('span', (row.rank ?? rows.findIndex(item => item.rating === row.rating) + 1) + '位');
+        badge.className = 'ranking-position';
+        title.append(badge);
+      }
+      title.append(element('span', row.name));
+      card.append(title);
+      const primary = section === 'rating' ? 'rating' : 'points';
+      if (Object.hasOwn(fields, primary)) {
+        const highlight = element('p');
+        highlight.className = 'ranking-highlight';
+        const number = element('strong', formatted(primary, row[primary]));
+        if (row[primary] < 0) number.classList.add('negative');
+        highlight.append(number, element('span', primary === 'points' ? 'pt' : '現在のレート'));
+        card.append(highlight);
+      }
+      const otherFields = Object.fromEntries(Object.entries(fields).filter(([key]) => key !== primary));
+      if (Object.keys(otherFields).length) metrics(card, row, otherFields);
+      if (section === 'rating' && row.trend?.length) {
+        const detail = element('details');
+        detail.append(element('summary', 'レート推移'));
+        table(detail, row.trend, {date:'対局日',rating:'レート'});
+        card.append(detail);
+      }
+      if (section === 'personal' && Array.isArray(row.opponents)) {
+        const detail = element('details');
+        detail.append(element('summary', '対戦相手別成績'));
+        const opponentFields = {rounds:'同卓数',wins:'勝',losses:'負',ties:'分',winRate:'勝率',
+          ...(Object.hasOwn(fields, 'averagePoints') ? {averagePoints:'自分の平均pt'} : {})};
+        for (const opponent of row.opponents) {
+          detail.append(element('h4', opponent.name));
+          metrics(detail, opponent, opponentFields);
+        }
+        if (!row.opponents.length) detail.append(element('p', '該当する対戦相手はいません。'));
+        card.append(detail);
+      }
+      cards.append(card);
+    }
+    content.append(cards);
   }
   async function refresh(month) {
     period.disabled = mode.disabled = true;
+    navigation.replaceChildren();
+    navigation.hidden = true;
     content.replaceChildren();
     status.textContent = '成績を読み込み中…';
     try {
