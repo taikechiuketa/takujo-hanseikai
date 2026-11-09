@@ -94,3 +94,8 @@ button.secondary,.sheet th,.history-table th{background:var(--theme-muted,#f3f3f
 .entry-add-round{width:100%;margin-top:.65rem;border:1px dashed var(--theme-border,#d9e1d9)}
 .entry-save-actions{border-top:1px solid var(--theme-border,#d9e1d9);padding-top:.75rem;margin-top:.75rem}
 .entry-save-actions button{flex:1}
+
+.sheet.settle{border-collapse:separate}
+.sheet.settle th,.sheet.settle td{padding:5px;text-align:center}
+.sheet.settle tbody th{top:auto}
+.sheet.settle input{width:100%;max-width:76px;text-align:center}
