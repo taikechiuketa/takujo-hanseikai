@@ -1131,6 +1131,7 @@ $('resumeHistoryDraft').onclick=()=>{
  }catch{$('recoveryInfo').textContent='保護していた入力を読み込めませんでした。';}
 };
 
+if(!cloud){startupStatus.textContent='端末のデータを読み込みました。';startupStatus.hidden=true;}
 $('sheetApp').hidden=false;
 });
 </script></body></html>
