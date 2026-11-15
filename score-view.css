@@ -1,4 +1,11 @@
 /* A bounded table keeps names visible on both short and very long sets. */
+/* Keep player selection and its actions reachable with a mobile keyboard open. */
+#masterDialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
+#masterDialog .master-list{max-height:38dvh;overflow:auto}
+#masterDialog .master-row>label{flex:1;min-width:0;overflow-wrap:anywhere;cursor:pointer;min-height:44px}
+#masterDialog input[type=checkbox]{flex-shrink:0}
+#masterDialog .modal-actions{position:sticky;bottom:-18px;background:var(--theme-surface,#fff);padding:10px 0;margin-bottom:-8px;z-index:1;flex-wrap:wrap}
+#masterDialog button:disabled{opacity:.5;cursor:default}
 .score-scroll{position:relative;isolation:isolate;overflow:auto;max-height:58vh;max-height:58dvh;border:1px solid var(--theme-border,#e4e4e7);border-radius:12px;scroll-padding-top:66px;scroll-padding-bottom:34px;-webkit-overflow-scrolling:touch}
 .score-scroll:focus-visible,.rank-summary-scroll:focus-visible{outline:2px solid var(--accent,#c60027);outline-offset:2px}
 .score-scroll table{margin-top:0;border-collapse:separate;border-spacing:0}
