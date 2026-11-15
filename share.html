@@ -7,7 +7,7 @@
 <title>セット結果｜卓上反省会</title>
 <link rel="stylesheet" href="./sheet.css">
 <script defer src="./vendor/supabase-2.119.0.js"></script>
-<script defer src="./share.js?v=group-title-1"></script>
+<link rel="stylesheet" href="./score-view.css"><script defer src="./set-analysis.js"></script><script defer src="./share.js?v=takechart-ui-20261116"></script>
 <style>
 #shareResults .sheet-wrap{max-height:none;margin-bottom:14px}
 #shareResults .history-table{margin:0;white-space:nowrap}
@@ -22,7 +22,7 @@
 <p id="shareDate"></p>
 <p id="shareRates" class="hint"></p>
 <div id="shareRanking" class="sheet-wrap"></div>
-<h2>半荘別スコア</h2>
+<div id="sharePlacements"></div><h2>半荘別スコア</h2><p class="hint">表内をスクロールしても対局者名と半荘番号は固定されます。</p>
 <div id="shareRounds" class="sheet-wrap"></div>
 <button id="copyShareLink" type="button" class="secondary">共有リンクをコピー</button>
 <p id="copyShareStatus" class="hint" role="status"></p>

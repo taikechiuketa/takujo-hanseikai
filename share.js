@@ -50,14 +50,10 @@ async function loadSharedSet() {
     appendRow(summary, [player.name, points, chips, ratesAvailable ? format(amount) + ' pt' : '—']);
     summary.lastElementChild.lastElementChild.classList.toggle('negative', ratesAvailable && amount < 0);
   });
-  const rounds = makeTable('shareRounds', ['半荘', ...data.players.map(player => player.name)]);
-  const labels = { normal: '三麻', north: '四人三麻', yonma: '四麻' };
-  data.rounds.forEach((round, index) => {
-    appendRow(rounds, [
-      (index + 1) + ' ・ ' + (labels[round.mode] || round.mode),
-      ...data.players.map((_, i) => scoreAt(round, i) ?? '—'),
-    ]);
-  });
+  const normalized={players:data.players.map((p,i)=>({...p,id:'seat'+i})),rounds:data.rounds.map(round=>({mode:round.mode,scores:Object.fromEntries(data.players.map((_,i)=>['seat'+i,round.scores?.[i]??null]))}))};
+  el('sharePlacements').innerHTML=TakechartSetView.analysis(normalized);
+  el('shareRounds').className='';
+  el('shareRounds').innerHTML=TakechartSetView.scoreTable(normalized);
   document.title = data.group + '｜セット結果';
   el('shareGroup').textContent = data.group;
   el('shareTitle').textContent = 'セット結果';

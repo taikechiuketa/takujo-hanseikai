@@ -1,5 +1,5 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#171b21"><title>卓上反省会｜試作版</title><link rel="stylesheet" href="./sheet.css?v=palette-save-1"><script src="./ranking-charts.js?v=1"></script><script src="./rule-format.js?v=1"></script><script src="./template-groups.js?v=rule-format-1"></script><script src="./vendor/supabase-2.119.0.js" defer></script><script src="./cloud-sheet.js?v=save-indicator-1" defer></script></head><body><div id="saveToast" role="status" hidden></div><p id="cloudStatus" role="status" hidden></p><main id="sheetApp" hidden><div id="cloudControls" hidden><a class="back-link" href="./account.html"><span aria-hidden="true">‹</span> マイグループ</a> <button id="cloudSave" type="button" hidden>保存を再試行</button></div><header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>グループ設定の試作版 · このブラウザに保存</p></div></header>
-<p id="demoSettingsNav"><a id="demoSettings" hidden>試作卓の設定</a></p>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#171b21"><title>卓上反省会｜対局・成績</title><link rel="stylesheet" href="./sheet.css?v=palette-save-1"><script src="./ranking-charts.js?v=1"></script><script src="./rule-format.js?v=1"></script><script src="./template-groups.js?v=rule-format-1"></script><script src="./vendor/supabase-2.119.0.js" defer></script><script src="./cloud-sheet.js?v=takechart-ui-20261116" defer></script><link rel="stylesheet" href="./score-view.css"><script src="./set-analysis.js"></script><script src="./group-recovery.js"></script></head><body><div id="saveToast" role="status" hidden></div><p id="cloudStatus" role="status" hidden></p><main id="sheetApp" hidden><div id="cloudControls" hidden><a class="back-link" href="./account.html"><span aria-hidden="true">‹</span> マイグループ</a> <button id="cloudSave" type="button" hidden>保存を再試行</button></div><header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>対局・成績管理</p></div></header>
+<div class="app-status"><span id="accountState">読み込み中…</span><button class="secondary" id="accountLogout" hidden>この端末からログアウト</button></div><div id="workspacePages"><p id="demoSettingsNav"><a id="demoSettings" hidden>試作卓の設定</a></p>
 <section class="card" id="appearanceCard">
   <h2>対局ルール・点数表</h2>
   <details><summary>このグループのルール・点数表を見る</summary>
@@ -7,17 +7,19 @@
     <img id="groupScorePreview" alt="登録した点数表" hidden><a id="groupScoreLink" download hidden>点数表をダウンロード</a>
   </details>
 </section>
-<nav class="navtabs"><button id="tabSheet" class="active" type="button">スコアシート</button><button id="tabStats" class="secondary" type="button">通算成績・履歴</button></nav><div id="sheetPage"><section class="card"><div class="row"><div><h2>セット設定</h2><p class="hint" id="setNumber"></p></div><div class="buttons"><button class="secondary" id="cancelEdit" hidden>編集をやめる</button><button class="secondary" id="newSet">新しいセット</button></div></div><details id="activeSetSettings" class="rate-settings"><summary>ポイント倍率・チップレート</summary><div class="settings"><label>ポイント倍率<input id="rate" type="number" min="0" step="1"></label><label>チップレート（pt/枚）<input id="chipRate" type="number" min="0" step="1"></label></div></details></section>
-<section class="card"><div class="row"><h2>プレイヤーマスター</h2><button class="secondary" id="manageMaster">登録・編集</button></div><p class="hint">一度登録した仲間を次回以降のセットでも選べます。名前の変更は過去のセット記録には影響しません。</p></section>
-<section class="card round-card" id="activeSetRounds"><h2>半荘スコア一覧</h2><div class="entry-player-actions"><button type="button" class="secondary" id="addPlayer">＋ プレイヤーを選ぶ</button><span class="hint">プレイヤーマスターから選択</span></div><div class="sheet-wrap"><table class="sheet" id="sheet"></table></div><button type="button" id="addRound" class="secondary entry-add-round">＋ 半荘を追加</button><p class="warn" id="warnings"></p><div class="buttons entry-save-actions"><button id="saveSet" type="button">セットを保存</button></div><p class="hint" id="setSaveIndicator" role="status" hidden></p></section>
+<nav class="navtabs main-navigation" aria-label="メインメニュー"><button id="tabSheet" class="active" type="button">入力</button><button id="tabStats" class="secondary" type="button">成績</button><button id="tabHistory" class="secondary" type="button">履歴</button><button id="tabSettings" class="secondary" type="button">設定</button></nav><div id="sheetPage"><section class="card"><div class="row"><div><h2>セット設定</h2><p class="hint" id="setNumber"></p><button class="secondary" id="editSetIdentity" type="button" hidden>日付・番号を編集</button></div><div class="buttons"><button class="secondary" id="cancelEdit" hidden>編集をやめる</button><button class="secondary" id="newSet">新しいセット</button></div></div><details id="activeSetSettings" class="rate-settings"><summary>ポイント倍率・チップレート</summary><div class="settings"><label>ポイント倍率<input id="rate" type="number" min="0" step="1"></label><label>チップレート（pt/枚）<input id="chipRate" type="number" min="0" step="1"></label></div></details></section>
+<section class="card" id="masterSection"><div class="row"><h2>プレイヤーマスター</h2><button class="secondary" id="manageMaster">登録・編集</button></div><p class="hint">一度登録した仲間を次回以降のセットでも選べます。名前の変更は過去のセット記録には影響しません。</p></section>
+<section class="card round-card" id="activeSetRounds"><h2>半荘スコア一覧</h2><div class="entry-player-actions"><button type="button" class="secondary" id="addPlayer">＋ プレイヤーを選ぶ</button><span class="hint">プレイヤーマスターから選択</span></div><div id="inputScoreScroll" class="sheet-wrap score-scroll" tabindex="0" role="region" aria-label="入力スコア表（対局者名を固定）"><table class="sheet" id="sheet"></table></div><button type="button" id="addRound" class="secondary entry-add-round">＋ 半荘を追加</button><p class="warn" id="warnings"></p><div class="buttons entry-save-actions"><button id="saveSet" type="button">セットを保存</button></div><p class="hint" id="setSaveIndicator" role="status" hidden></p></section>
 <section class="card" id="activeSetSettlement"><h2>チップ・最終精算</h2><p class="hint">チップはセットの最後に増減枚数を入力。精算額＝累計pt×ポイントレート＋チップ枚数×チップレート。</p><div class="sheet-wrap"><table class="sheet settle" id="settle"></table></div><p class="warn" id="chipWarning"></p><div class="buttons entry-save-actions"><button class="secondary" id="finishSet" type="button">セットを終了</button></div><p class="hint" id="saveStatus" role="status"></p></section>
-<details class="card"><summary>データ管理</summary><div class="row"><div><p class="hint">現在のセットをJSONファイルに書き出し、バックアップや別のブラウザへの移行に使えます。読み込むと現在のセットが置き換わります。プレイヤーマスターとセット履歴は対象外です。</p></div><div class="buttons"><button class="secondary" id="export">JSON保存</button><button class="secondary" id="import">JSON読込</button><input class="hidden" type="file" id="file" accept="application/json,.json"></div></div><hr><p class="hint">全データには入力中のセット・セット履歴・プレイヤーマスターが含まれます。</p><div class="buttons"><button class="secondary" id="backupAll">全データをバックアップ</button><button class="secondary" id="restoreAll">バックアップから復元</button><input class="hidden" type="file" id="backupFile" accept="application/json,.json"></div></details>
-</div><div id="statsPage" hidden><section class="card"><h2>通算成績</h2><div class="buttons"><button type="button" class="secondary" id="exportPublicStats">表示中の通算成績を書き出す</button></div><p class="hint">累計ポイントの高い順。混在セットのチップとその収支は「すべて」に含まれます。</p><div class="stats-filter"><label>集計期間 <select id="statsPeriod"><option value="month">今月</option><option value="previous">前月</option><option value="monthly">月間ランキング</option><option value="year">今年</option><option value="all" selected>全期間</option><option value="range">範囲指定</option></select></label><label id="statsMonthLabel" hidden>対象月 <select id="statsMonth"></select></label><span id="statsRange" hidden><label>開始日 <input type="date" id="statsFrom"></label> <label>終了日 <input type="date" id="statsTo"></label></span></div><div class="navtabs" aria-label="成績表示"><button id="showTotals" class="active" aria-pressed="true">通算成績</button><button id="showRating" aria-pressed="false">レーティング</button></div><div id="ratingPanel" hidden><label>ルール <select id="ratingMode"><option value="all">すべて</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label><p class="hint">全期間の現在R。「すべて」は全ルールの半荘から計算する総合Rです。20半荘未満は暫定です。名前をタップすると個人成績が開き、表の下には選択期間のR推移が表示されます。</p><div class="rating-scroll"><table id="ratingTable" class="history-table"></table></div><div id="ratingTrend"></div></div><div id="totalsPanel" class="standings-scroll"><label>ルール <select id="totalsMode"><option value="all">すべて</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label><table id="statsTable" class="history-table"></table></div><p id="statsNote" class="hint"></p></section><section class="card"><h2>セット履歴</h2><button class="secondary" id="importHistory">雀簿データを追加</button><div class="stats-filter"><label>対局者 <select id="historyPlayer"><option value="">すべて</option></select></label><label>ルール <select id="historyRule"><option value="">すべて</option><option value="normal">三人麻雀</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label></div><div id="historyList"></div></section></div></main><dialog id="masterDialog"><h2 id="masterHeading">プレイヤーを追加</h2><div class="master-list" id="masterList"></div><div class="row" style="margin-top:12px"><input id="newMasterName" placeholder="新しいプレイヤー名" style="flex:1;width:160px"><button id="createMaster">＋ 登録</button></div><div class="modal-actions"><button class="secondary" id="closeMaster">閉じる</button><button id="applyMaster">選択した人を追加</button></div><p id="masterCloudStatus" role="status"></p><button type="button" id="masterCloudRetry" hidden>プレイヤーマスターの保存を再試行</button></dialog><dialog id="importHistoryDialog"><h2>雀簿データを追加</h2><label for="historyText">共有ページからコピーした文字、または移行用JSON</label><label>取り込みルール <select id="importRule"><option value="">自動判定（4人打ちは四人三麻）</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label><textarea id="historyText" rows="8" style="width:100%;margin-top:8px"></textarea><div class="modal-actions"><button class="secondary" id="closeHistoryImport">閉じる</button><button id="previewHistoryImport">内容を確認</button></div></dialog><dialog id="playerStatsDialog" aria-labelledby="playerStatsTitle"><h2 id="playerStatsTitle"></h2><p class="hint" id="playerStatsPeriod"></p><div class="navtabs" id="playerStatsTabs" role="tablist" aria-label="ルール"><button type="button" id="playerRuleAll" role="tab" aria-controls="playerStatsResults" data-mode="all">すべて</button><button type="button" id="playerRuleNormal" role="tab" aria-controls="playerStatsResults" data-mode="normal">三麻</button><button type="button" id="playerRuleNorth" role="tab" aria-controls="playerStatsResults" data-mode="north">四人三麻</button><button type="button" id="playerRuleYonma" role="tab" aria-controls="playerStatsResults" data-mode="yonma">四人麻雀</button><button type="button" id="playerRuleTrend" role="tab" aria-controls="playerStatsResults" data-mode="trend">推移グラフ</button></div><div id="playerStatsResults" role="tabpanel"></div><p class="hint" id="playerStatsIncomplete" hidden></p><p class="hint" id="playerStatsChipsNote" hidden>混在セットのチップとその収支は「すべて」で集計します。</p><p class="hint" id="playerRankHint">着順は必要人数の点数がそろった半荘で集計。同点は同順位です。抜け番は対局数に含みません。</p><form method="dialog" class="modal-actions"><button class="secondary">閉じる</button></form></dialog><script>
+<details class="card" id="dataSection"><summary>データ管理</summary><div class="row"><div><p class="hint">現在のセットをJSONファイルに書き出し、バックアップや別のブラウザへの移行に使えます。読み込むと現在のセットが置き換わります。プレイヤーマスターとセット履歴は対象外です。</p></div><div class="buttons"><button class="secondary" id="export">JSON保存</button><button class="secondary" id="import">JSON読込</button><input class="hidden" type="file" id="file" accept="application/json,.json"></div></div><hr><p class="hint">全データには入力中のセット・セット履歴・プレイヤーマスターが含まれます。</p><div class="buttons"><button class="secondary" id="backupAll">全データをバックアップ</button><button class="secondary" id="restoreAll">バックアップから復元</button><input class="hidden" type="file" id="backupFile" accept="application/json,.json"></div></details>
+</div><div id="statsPage" hidden><section class="card"><h2>成績</h2><div class="buttons"><button type="button" class="secondary" id="exportPublicStats">表示中の通算成績を書き出す</button></div><div class="navtabs" aria-label="成績表示"><button id="showTotals" class="active" aria-pressed="true">通算成績</button><button id="showRating" aria-pressed="false">レーティング</button></div><div id="ratingPanel" hidden><p id="ratingPanelContext" class="hint"></p><label>ルール <select id="ratingMode"><option value="all">すべて</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label><p class="hint">現在R・対象半荘・直近の増減は全期間の値です。「すべて」は全ルールの半荘から計算する総合Rです。20半荘未満は暫定です。名前をタップすると個人成績が開き、表の下には選択期間のR推移が表示されます。</p><div class="rating-scroll"><table id="ratingTable" class="history-table"></table></div><section class="rating-trend-section"><h3>R推移</h3><p class="hint">この期間は下の推移だけに適用します。現在Rは全期間の値です。</p><div class="stats-filter period-filter" id="ratingTrendPeriodFilter"><label>R推移の表示期間 <select id="ratingTrendPeriod"><option value="month">今月</option><option value="previous">前月</option><option value="monthly">月間ランキング</option><option value="year">今年</option><option value="all" selected>全期間</option><option value="range">範囲指定</option></select></label><label id="ratingTrendMonthLabel" hidden>対象月 <select id="ratingTrendMonth"></select></label><span id="ratingTrendRange" hidden><label>開始日 <input type="date" id="ratingTrendFrom"></label> <label>終了日 <input type="date" id="ratingTrendTo"></label></span></div><p id="ratingTrendPeriodContext" class="hint"></p><div id="ratingTrend"></div></section></div><div id="totalsPanel"><p id="totalsPanelContext" class="hint"></p><p class="hint">累計ポイントの高い順。混在セットのチップとその収支は「すべて」に含まれます。</p><div class="stats-filter period-filter" id="totalsPeriodFilter"><label>集計期間 <select id="statsPeriod"><option value="month">今月</option><option value="previous">前月</option><option value="monthly">月間ランキング</option><option value="year">今年</option><option value="all" selected>全期間</option><option value="range">範囲指定</option></select></label><label id="statsMonthLabel" hidden>対象月 <select id="statsMonth"></select></label><span id="statsRange" hidden><label>開始日 <input type="date" id="statsFrom"></label> <label>終了日 <input type="date" id="statsTo"></label></span></div><label>ルール <select id="totalsMode"><option value="all">すべて</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label><div class="standings-scroll"><table id="statsTable" class="history-table"></table></div></div><p id="statsNote" class="hint"></p></section><section class="card" id="historySection"><h2>セット履歴</h2><button class="secondary" id="importHistory">雀簿データを追加</button><div class="stats-filter"><label>対局者 <select id="historyPlayer"><option value="">すべて</option></select></label><label>ルール <select id="historyRule"><option value="">すべて</option><option value="normal">三人麻雀</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label></div><div id="historyList"></div></section></div><div id="historyPage" hidden></div><div id="groupSettingsPage" hidden><section class="card"><h2>設定</h2><p><a id="groupSettingsLink">卓名・配色・ルール・共有設定を開く</a></p></section><section class="card"><h2>復旧用データ</h2><p class="hint">このアカウント・卓のデータだけを保護しています。端末の故障に備え、ファイルにも書き出してください。</p><button id="downloadRecovery" class="secondary">復旧コピーを書き出す</button><button id="resumeHistoryDraft" class="secondary">保護した履歴入力を再開</button><details><summary>復旧コピーから端末に戻す</summary><button id="listRecovery" class="secondary">コピーの一覧を表示</button><label>復旧するコピー<select id="recoverySelection"></select></label><button id="restoreRecovery" class="secondary">選んだコピーを端末に戻す</button></details><p id="recoveryInfo" class="hint" role="status"></p></section></div></div></main><dialog id="setIdentityDialog" aria-labelledby="setIdentityTitle"><form id="setIdentityForm"><h2 id="setIdentityTitle">対局日・伝票番号を編集</h2><div class="settings"><label for="setDate">対局日<input id="setDate" type="date" min="0001-01-01" max="9999-12-31" required></label><label for="setSequence">連番<input id="setSequence" type="number" inputmode="numeric" min="1" max="9007199254740991" step="1" required></label></div><p class="hint">連番は1以上の整数。同じ日付・番号のセットは登録できません。</p><p class="hint">変更は「セットを保存」で反映します。日付は期間別成績、日付・番号の順序はレーティングの計算順に反映されます。</p><p class="hint" id="identityShareNote" hidden>保存済みセットの日付・番号を変更しても、セットの内部IDに結び付く共有リンクは維持されます。</p><p id="identityError" class="warn" role="alert"></p><div class="modal-actions"><button id="cancelSetIdentity" type="button" class="secondary">キャンセル</button><button id="applySetIdentity" type="submit">変更する</button></div></form></dialog><dialog id="masterDialog"><h2 id="masterHeading">プレイヤーを追加</h2><div class="master-list" id="masterList"></div><div class="row" style="margin-top:12px"><input id="newMasterName" placeholder="新しいプレイヤー名" style="flex:1;width:160px"><button id="createMaster">＋ 登録</button></div><div class="modal-actions"><button class="secondary" id="closeMaster">閉じる</button><button id="applyMaster">選択した人を追加</button></div><p id="masterCloudStatus" role="status"></p><button type="button" id="masterCloudRetry" hidden>プレイヤーマスターの保存を再試行</button></dialog><dialog id="importHistoryDialog"><h2>雀簿データを追加</h2><label for="historyText">共有ページからコピーした文字、または移行用JSON</label><label>取り込みルール <select id="importRule"><option value="">自動判定（4人打ちは四人三麻）</option><option value="normal">三麻</option><option value="north">四人三麻</option><option value="yonma">四人麻雀</option></select></label><textarea id="historyText" rows="8" style="width:100%;margin-top:8px"></textarea><div class="modal-actions"><button class="secondary" id="closeHistoryImport">閉じる</button><button id="previewHistoryImport">内容を確認</button></div></dialog><dialog id="playerStatsDialog" aria-labelledby="playerStatsTitle"><h2 id="playerStatsTitle"></h2><p class="hint" id="playerStatsPeriod"></p><div class="navtabs" id="playerStatsTabs" role="tablist" aria-label="ルール"><button type="button" id="playerRuleAll" role="tab" aria-controls="playerStatsResults" data-mode="all">すべて</button><button type="button" id="playerRuleNormal" role="tab" aria-controls="playerStatsResults" data-mode="normal">三麻</button><button type="button" id="playerRuleNorth" role="tab" aria-controls="playerStatsResults" data-mode="north">四人三麻</button><button type="button" id="playerRuleYonma" role="tab" aria-controls="playerStatsResults" data-mode="yonma">四人麻雀</button><button type="button" id="playerRuleTrend" role="tab" aria-controls="playerStatsResults" data-mode="trend">推移グラフ</button></div><div id="playerStatsResults" role="tabpanel"></div><p class="hint" id="playerStatsIncomplete" hidden></p><p class="hint" id="playerStatsChipsNote" hidden>混在セットのチップとその収支は「すべて」で集計します。</p><p class="hint" id="playerRankHint">着順は必要人数の点数がそろった半荘で集計。同点は同順位です。抜け番は対局数に含みません。</p><form method="dialog" class="modal-actions"><button class="secondary">閉じる</button></form></dialog><script>
 document.addEventListener('DOMContentLoaded', async () => {
 const pageParams=new URLSearchParams(location.search);
 const cloudId=pageParams.has('local')?null:pageParams.get('group');
 const readOnly=Boolean(cloudId)&&pageParams.get('view')==='results';
 let cloud;
+if(!cloudId&&!pageParams.has('local')){location.replace('./account.html');return;}
+const startupStatus=document.getElementById('cloudStatus');startupStatus.hidden=false;startupStatus.textContent=cloudId?'ログインと保存データを確認中…':'端末のデータを保護しています…';
 if(cloudId){
   if(location.hash==='#appearanceSettings'){
     location.replace('./settings.html'+location.search);
@@ -41,15 +43,13 @@ if(!cloud){
   demoSettings.hidden=false;
 }
 const storage=cloud?.storage||window.localStorage;
-const MASTER_KEY=groupPrefix+'players';let master=[];try{master=JSON.parse(storage.getItem(MASTER_KEY))||[]}catch{};if(!Array.isArray(master))master=[];const saveMaster=()=>storage.setItem(MASTER_KEY,JSON.stringify(master));const KEY=groupPrefix+'current';const ARCHIVE_KEY=groupPrefix+'history';const today=()=>{const d=new Date();return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`};const archives=()=>{try{return JSON.parse(storage.getItem(ARCHIVE_KEY))||[]}catch{return []}};const nextSequence=()=>{const d=today();const used=archives().filter(x=>x.date===d).map(x=>Number(x.sequence)||0);return Math.max(0,...used)+1};const modes=[['normal','三麻'],['north','四人三麻'],['yonma','四人麻雀']];const fresh=(start=false)=>({idle:!start,date:start?today():'',sequence:start?nextSequence():0,rate:100,chipRate:100,players:[],rounds:[]});let editing=null;let state;try{state=JSON.parse(storage.getItem(KEY))||fresh()}catch{state=fresh()}if(!state.players||!state.rounds)state=fresh();if(state.rounds.length===1&&state.rounds[0].id==='r1'&&state.players.length===3&&state.players.every((p,i)=>p.id==='p'+(i+1)&&p.name===['たけち','Aさん','Bさん'][i]&&!p.chips)&&Object.values(state.rounds[0].scores).every(score=>score==='')){
-  const used=new Set(archives().flatMap(set=>set.players.map(p=>p.masterId)));
-  const sampleIds=new Set(state.players.map(p=>p.masterId).filter(id=>id&&!used.has(id)));
-  master=master.filter(player=>!sampleIds.has(player.id));
-  state=fresh();
-  storage.setItem(KEY,JSON.stringify(state));
-}
-if(!state.idle){if(!state.date){state.date=today();state.sequence=nextSequence()}if(!state.sequence)state.sequence=1;}for(const r of state.rounds){if(r.mode==='half')r.mode='normal'}for(const p of state.players){let m=master.find(x=>x.id===p.masterId);if(!m){m=master.find(x=>x.name===p.name);if(!m){m={id:'m'+Date.now()+Math.random().toString(36).slice(2,7),name:p.name};master.push(m)}p.masterId=m.id}}saveMaster();const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const fmt=n=>(n>0?'+':'')+n.toLocaleString('ja-JP');const value=v=>v===''||v==='skip'?0:Number(v)||0;const save=()=>{if(editing)return;try{storage.setItem(KEY,JSON.stringify(state))}catch{alert('保存できませんでした。ブラウザの設定をご確認ください。')}};const uid=()=>String(Date.now())+Math.random().toString(36).slice(2,7);function totals(){return Object.fromEntries(state.players.map(p=>[p.id,state.rounds.reduce((s,r)=>s+value(r.scores[p.id]),0)]))}function render(){
+try{await HanseiRecovery.checkpoint(cloud?.scope||'local:'+groupPrefix,'before-ui-upgrade',{entries:[['current',storage.getItem(groupPrefix+'current')],['history',storage.getItem(groupPrefix+'history')],['players',storage.getItem(groupPrefix+'players')]]});}catch{const status=document.getElementById('cloudStatus');status.hidden=false;status.textContent='復旧コピーを保護できませんでした。保存領域を確認して再読み込みしてください。';return;}
+const recoveryScope=cloud?.scope||'local:'+groupPrefix;
+const protect=(kind,data)=>HanseiRecovery.checkpoint(recoveryScope,kind,data);
+const historyEditKey='hansei-history-edit:'+recoveryScope;
+const MASTER_KEY=groupPrefix+'players';let master=[];try{master=JSON.parse(storage.getItem(MASTER_KEY))||[]}catch{};if(!Array.isArray(master))master=[];const saveMaster=()=>storage.setItem(MASTER_KEY,JSON.stringify(master));const KEY=groupPrefix+'current';const ARCHIVE_KEY=groupPrefix+'history';const today=()=>{const d=new Date();return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`};const archives=()=>{try{return JSON.parse(storage.getItem(ARCHIVE_KEY))||[]}catch{return []}};const nextSequence=()=>{const d=today();const used=archives().filter(x=>x.date===d).map(x=>Number(x.sequence)||0);return Math.max(0,...used)+1};const modes=[['normal','三麻'],['north','四人三麻'],['yonma','四人麻雀']];const fresh=(start=false)=>({idle:!start,date:start?today():'',sequence:start?nextSequence():0,rate:100,chipRate:100,players:[],rounds:[]});let editing=null;let state;try{state=JSON.parse(storage.getItem(KEY))||fresh()}catch{state=fresh()}if(!state.players||!state.rounds)state=fresh();if(!state.idle){if(!state.date){state.date=today();state.sequence=nextSequence()}if(!state.sequence)state.sequence=1;}for(const r of state.rounds){if(r.mode==='half')r.mode='normal'}for(const p of state.players){let m=master.find(x=>x.id===p.masterId);if(!m){m=master.find(x=>x.name===p.name);if(!m){m={id:'m'+Date.now()+Math.random().toString(36).slice(2,7),name:p.name};master.push(m)}p.masterId=m.id}}const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const fmt=n=>(n>0?'+':'')+n.toLocaleString('ja-JP');const value=v=>v===''||v==='skip'?0:Number(v)||0;const save=()=>{if(editing){try{localStorage.setItem(historyEditKey,JSON.stringify({index:editing.index,original:editing.original,set:state}));$('setSaveIndicator').textContent='履歴の変更を端末に保護済み・未送信';}catch{alert('履歴の入力を保護できません。バックアップしてください。')}return;}try{storage.setItem(KEY,JSON.stringify(state))}catch{alert('保存できませんでした。ブラウザの設定をご確認ください。')}};const uid=()=>String(Date.now())+Math.random().toString(36).slice(2,7);function totals(){return Object.fromEntries(state.players.map(p=>[p.id,state.rounds.reduce((s,r)=>s+value(r.scores[p.id]),0)]))}function render(){
   const idle=state.idle===true;
+  $('editSetIdentity').hidden=idle||readOnly;
   for(const id of ['saveSet','export','activeSetSettings','activeSetRounds','activeSetSettlement'])$(id).hidden=idle;
   $('finishSet').hidden=idle||Boolean(editing);
   $('setNumber').textContent=idle?'進行中のセットはありません。':`伝票番号 ${state.date} - ${state.sequence}${editing?'（履歴を編集中）':''}`;$('rate').value=state.rate;$('chipRate').value=state.chipRate;renderSheet();renderSettle()}
@@ -130,6 +130,7 @@ new MutationObserver(()=>{
   if(message.includes('保存しました。')||message.includes('できませんでした。'))showSaveToast(message);
 }).observe($('saveStatus'),{childList:true});
 function confirmSetSave(message=''){
+  const identityIssue=validateSetIdentityForSave();if(identityIssue){alert(identityIssue);return false;}
   const warnings=roundScoreIssues().map(issue=>issue.message);
   const chips=state.players.reduce((sum,player)=>sum+value(player.chips),0);
   if(chips!==0)warnings.push(`チップ増減の合計が ${fmt(chips)} 枚です（通常は0枚）。`);
@@ -174,7 +175,7 @@ renderScoreWarnings();
 const t=totals();const totalRow=$('sheet').querySelector('tr.total');
 if(totalRow)state.players.forEach((p,i)=>{const cell=totalRow.cells[i+1];if(cell){cell.textContent=fmt(t[p.id]);cell.className=t[p.id]>0?'positive':t[p.id]<0?'negative':''}});
 });$('sheet').addEventListener('focusout',e=>{if(e.target.matches('input[data-score]')){setTimeout(()=>{if(!$('sheet').contains(document.activeElement)||!document.activeElement.matches('input[data-score]')){renderSheet();renderSettle()}},0)}});$('sheet').addEventListener('pointerdown',e=>{const el=e.target.closest('input[data-score]');if(el&&chooseAutoTarget(el)){e.preventDefault();e.stopImmediatePropagation()}},true);$('sheet').addEventListener('focusin',e=>{if(e.target.matches('input[data-score]'))chooseAutoTarget(e.target)});$('sheet').addEventListener('change',e=>{if(e.target.matches('[data-mode]')){const r=state.rounds.find(x=>x.id===e.target.dataset.mode);for(const id of (r.autoIds||[])){if(r.scores[id]==='skip'||id===r.autoTarget)r.scores[id]=''}r.mode=e.target.value;r.autoTarget=null;r.autoIds=[];refreshRound(r)}});
-$('sheet').addEventListener('click',e=>{const remove=e.target.closest('[data-remove-player]');if(remove){const p=state.players.find(x=>x.id===remove.dataset.removePlayer);if(!p)return;const hasScores=state.rounds.some(r=>r.scores[p.id]!==''&&r.scores[p.id]!==undefined);const message=hasScores?`${p.name}をこのセットから削除しますか？ 過去の半荘の点数と精算データも削除されます。プレイヤーマスターには残ります。`:`${p.name}をこのセットから削除しますか？ プレイヤーマスターには残ります。`;if(confirm(message)){state.players=state.players.filter(x=>x.id!==p.id);state.rounds.forEach(r=>delete r.scores[p.id]);save();render()}return}let del=e.target.closest('[data-delete]');if(del&&confirm('この半荘を削除しますか？')){state.rounds=state.rounds.filter(r=>r.id!==del.dataset.delete);save();render()}let ren=e.target.closest('[data-rename]');if(ren){const p=state.players.find(x=>x.id===ren.dataset.rename);const name=prompt('プレイヤー名',p.name);if(name&&name.trim()){p.name=name.trim();save();render()}}});$('settle').addEventListener('input',e=>{if(!e.target.matches('[data-chip]'))return;if(e.target.value!==''&&!/^-?\d+$/.test(e.target.value))return;state.players.find(p=>p.id===e.target.dataset.chip).chips=e.target.value;e.target.classList.toggle('negative-chip',value(e.target.value)<0);save();updateSettlementAmounts();renderChipWarning()});$('addRound').onclick=()=>{const last=state.rounds.at(-1);state.rounds.push({id:uid(),mode:last?.mode||'normal',scores:Object.fromEntries(state.players.map(p=>[p.id,'']))});save();renderSheet();renderSettle()};let masterMode='add';function showMaster(mode){masterMode=mode;$('masterHeading').textContent=mode==='add'?'プレイヤーを選択':'プレイヤーマスター管理';$('applyMaster').style.display=mode==='add'?'':'none';$('newMasterName').value='';clearSavedMasterNotice();renderMaster();$('masterDialog').showModal()}function renderMaster(){const active=new Set(state.players.map(p=>p.masterId));$('masterList').innerHTML=master.map(m=>`<div class="master-row"><label><input type="checkbox" data-master-check="${esc(m.id)}" ${active.has(m.id)?'disabled':''}><span>${esc(m.name)}</span>${active.has(m.id)?'<span class="hint">参加中</span>':''}</label>${masterMode==='manage'?`<label class="hint"><input type="checkbox" data-master-ranking="${esc(m.id)}" ${m.rankingVisible===false?'':'checked'}>ランキングに表示</label>`:''}<div class="buttons"><button class="secondary" data-master-rename="${esc(m.id)}">編集</button><button class="danger" data-master-delete="${esc(m.id)}">削除</button></div></div>`).join('')||'<p class="hint">まだ登録されていません</p>'}function addFromMaster(ids){for(const mid of ids){const m=master.find(x=>x.id===mid);if(!m||state.players.some(p=>p.masterId===mid))continue;const id=uid();state.players.push({id,masterId:mid,name:m.name,chips:''});state.rounds.forEach(r=>r.scores[id]='')}save();render()}$('addPlayer').onclick=()=>showMaster('add');$('manageMaster').onclick=()=>showMaster('manage');$('closeMaster').onclick=()=>$('masterDialog').close();$('createMaster').onclick=()=>{if(cloud&&$('cloudSave').disabled)return;const name=$('newMasterName').value.trim();if(!name)return;if(master.some(m=>m.name===name)){alert('同じ名前が登録されています');return}const m={id:'m'+uid(),name};master.push(m);saveMaster();$('newMasterName').value='';renderMaster();persistMaster()};$('applyMaster').onclick=()=>{addFromMaster([...document.querySelectorAll('[data-master-check]:checked')].map(e=>e.dataset.masterCheck));$('masterDialog').close()};$('masterList').onclick=e=>{if(cloud&&$('cloudSave').disabled)return;const rename=e.target.closest('[data-master-rename]');const del=e.target.closest('[data-master-delete]');if(rename){const m=master.find(x=>x.id===rename.dataset.masterRename);const name=prompt('マスターの名前を変更',m.name);if(name&&name.trim()&&!master.some(x=>x.id!==m.id&&x.name===name.trim())){m.name=name.trim();state.players.filter(p=>p.masterId===m.id).forEach(p=>p.name=m.name);saveMaster();save();render();renderMaster();persistMaster()}}if(del){const m=master.find(x=>x.id===del.dataset.masterDelete);if(confirm(`${m.name}をマスターから削除しますか？ 現在のスコア記録は残ります。`)){master=master.filter(x=>x.id!==m.id);saveMaster();renderMaster();persistMaster()}}};['rate','chipRate'].forEach(id=>$(id).addEventListener('change',e=>{state[id]=e.target.value;save();renderSettle()}));$('newSet').onclick=()=>{if(cloud&&$('cloudSave').disabled)return;const hadSet=!state.idle;if(!state.idle){if(!confirmSetSave('現在のセットを履歴に保存して、新しいセットを開始しますか？'))return;if(!archiveCurrent())return;}$('saveStatus').textContent='';state=fresh(true);state.players=[];state.rounds=[{id:uid(),mode:'normal',scores:{}}];save();render();showMaster('add');if(cloud&&hadSet)cloud.save()};$('export').onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mahjong-'+state.date.replaceAll('/','-')+'-'+state.sequence+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};$('import').onclick=()=>$('file').click();$('file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const s=JSON.parse(await file.text());if(!Array.isArray(s.players)||!Array.isArray(s.rounds)||!s.players.every(p=>p.id&&typeof p.name==='string')||!s.rounds.every(r=>r.scores&&typeof r.scores==='object'))throw Error('形式が違います');if(confirm('現在のセットを読み込んだデータで置き換えますか？')){state=s;save();render()}}catch(err){alert('読み込めませんでした：'+err.message)}e.target.value=''};render();
+$('sheet').addEventListener('click',e=>{const remove=e.target.closest('[data-remove-player]');if(remove){const p=state.players.find(x=>x.id===remove.dataset.removePlayer);if(!p)return;const hasScores=state.rounds.some(r=>r.scores[p.id]!==''&&r.scores[p.id]!==undefined);const message=hasScores?`${p.name}をこのセットから削除しますか？ 過去の半荘の点数と精算データも削除されます。プレイヤーマスターには残ります。`:`${p.name}をこのセットから削除しますか？ プレイヤーマスターには残ります。`;if(confirm(message)){state.players=state.players.filter(x=>x.id!==p.id);state.rounds.forEach(r=>delete r.scores[p.id]);save();render()}return}let del=e.target.closest('[data-delete]');if(del&&confirm('この半荘を削除しますか？')){state.rounds=state.rounds.filter(r=>r.id!==del.dataset.delete);save();render()}let ren=e.target.closest('[data-rename]');if(ren){const p=state.players.find(x=>x.id===ren.dataset.rename);const name=prompt('プレイヤー名',p.name);if(name&&name.trim()){p.name=name.trim();save();render()}}});$('settle').addEventListener('input',e=>{if(!e.target.matches('[data-chip]'))return;if(e.target.value!==''&&!/^-?\d+$/.test(e.target.value))return;state.players.find(p=>p.id===e.target.dataset.chip).chips=e.target.value;e.target.classList.toggle('negative-chip',value(e.target.value)<0);save();updateSettlementAmounts();renderChipWarning()});$('addRound').onclick=()=>{const last=state.rounds.at(-1);state.rounds.push({id:uid(),mode:last?.mode||'normal',scores:Object.fromEntries(state.players.map(p=>[p.id,'']))});save();renderSheet();renderSettle();$('inputScoreScroll').scrollTop=$('inputScoreScroll').scrollHeight;};let masterMode='add';function showMaster(mode){masterMode=mode;$('masterHeading').textContent=mode==='add'?'プレイヤーを選択':'プレイヤーマスター管理';$('applyMaster').style.display=mode==='add'?'':'none';$('newMasterName').value='';clearSavedMasterNotice();renderMaster();$('masterDialog').showModal()}function renderMaster(){const active=new Set(state.players.map(p=>p.masterId));$('masterList').innerHTML=master.map(m=>`<div class="master-row"><label><input type="checkbox" data-master-check="${esc(m.id)}" ${active.has(m.id)?'disabled':''}><span>${esc(m.name)}</span>${active.has(m.id)?'<span class="hint">参加中</span>':''}</label>${masterMode==='manage'?`<label class="hint"><input type="checkbox" data-master-ranking="${esc(m.id)}" ${m.rankingVisible===false?'':'checked'}>ランキングに表示</label>`:''}<div class="buttons"><button class="secondary" data-master-rename="${esc(m.id)}">編集</button><button class="danger" data-master-delete="${esc(m.id)}">削除</button></div></div>`).join('')||'<p class="hint">まだ登録されていません</p>'}function addFromMaster(ids){for(const mid of ids){const m=master.find(x=>x.id===mid);if(!m||state.players.some(p=>p.masterId===mid))continue;const id=uid();state.players.push({id,masterId:mid,name:m.name,chips:''});state.rounds.forEach(r=>r.scores[id]='')}save();render()}$('addPlayer').onclick=()=>showMaster('add');$('manageMaster').onclick=()=>showMaster('manage');$('closeMaster').onclick=()=>$('masterDialog').close();$('createMaster').onclick=()=>{if(cloud&&$('cloudSave').disabled)return;const name=$('newMasterName').value.trim();if(!name)return;if(master.some(m=>m.name===name)){alert('同じ名前が登録されています');return}const m={id:'m'+uid(),name};master.push(m);saveMaster();$('newMasterName').value='';renderMaster();persistMaster()};$('applyMaster').onclick=()=>{addFromMaster([...document.querySelectorAll('[data-master-check]:checked')].map(e=>e.dataset.masterCheck));$('masterDialog').close()};$('masterList').onclick=e=>{if(cloud&&$('cloudSave').disabled)return;const rename=e.target.closest('[data-master-rename]');const del=e.target.closest('[data-master-delete]');if(rename){const m=master.find(x=>x.id===rename.dataset.masterRename);const name=prompt('マスターの名前を変更',m.name);if(name&&name.trim()&&!master.some(x=>x.id!==m.id&&x.name===name.trim())){m.name=name.trim();state.players.filter(p=>p.masterId===m.id).forEach(p=>p.name=m.name);saveMaster();save();render();renderMaster();persistMaster()}}if(del){const m=master.find(x=>x.id===del.dataset.masterDelete);if(confirm(`${m.name}をマスターから削除しますか？ 現在のスコア記録は残ります。`)){master=master.filter(x=>x.id!==m.id);saveMaster();renderMaster();persistMaster()}}};['rate','chipRate'].forEach(id=>$(id).addEventListener('change',e=>{state[id]=e.target.value;save();renderSettle()}));$('newSet').onclick=()=>{if(cloud&&$('cloudSave').disabled)return;const hadSet=!state.idle;if(!state.idle){if(!confirmSetSave('現在のセットを履歴に保存して、新しいセットを開始しますか？'))return;if(!archiveCurrent())return;}$('saveStatus').textContent='';state=fresh(true);state.players=[];state.rounds=[{id:uid(),mode:'normal',scores:{}}];save();render();showMaster('add');if(cloud&&hadSet)cloud.save()};$('export').onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mahjong-'+state.date.replaceAll('/','-')+'-'+state.sequence+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};$('import').onclick=()=>$('file').click();$('file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const s=JSON.parse(await file.text());if(!Array.isArray(s.players)||!Array.isArray(s.rounds)||!s.players.every(p=>p.id&&typeof p.name==='string')||!s.rounds.every(r=>r.scores&&typeof r.scores==='object'))throw Error('形式が違います');if(confirm('現在のセットを読み込んだデータで置き換えますか？')){state=s;save();render()}}catch(err){alert('読み込めませんでした：'+err.message)}e.target.value=''};render();
 
 function clearSavedMasterNotice() {
   if(cloud&&!cloud.hasUnsavedPlayers()){
@@ -212,6 +213,7 @@ function archiveCurrent(){
   return true;
 }
 function endHistoryEdit(){
+  localStorage.removeItem(historyEditKey);
   state=editing.current;
   editing=null;
   $('cancelEdit').hidden=true;
@@ -241,7 +243,7 @@ function startHistoryEdit(index){
   switchPage('sheet');
 }
 $('cancelEdit').onclick=()=>{
-  if(confirm('履歴の編集を取り消しますか？'))endHistoryEdit();
+  if(confirm('履歴の編集を取り消しますか？'))protect('cancel-history-edit',{data:liveData(),draft:localStorage.getItem(historyEditKey)}).then(endHistoryEdit).catch(()=>alert('復旧コピーを作れないため取り消しを止めました。'));
 };
 $('finishSet').onclick=()=>{
   if(cloud&&$('cloudSave').disabled)return;
@@ -458,28 +460,28 @@ function setResults(set,mode='all'){
 function todayMonth(){
   return new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit'}).format(new Date());
 }
-function statsDateFilter(){
-  const period=$('statsPeriod').value;
-  $('statsRange').hidden=period!=='range';
+function statsDateFilter(prefix='stats'){
+  const period=$(prefix+'Period').value;
+  $(prefix+'Range').hidden=period!=='range';
   const monthly=period==='monthly';
-  $('statsMonthLabel').hidden=!monthly;
-  const picker=$('statsMonth');
+  $(prefix+'MonthLabel').hidden=!monthly;
+  const picker=$(prefix+'Month');
   if(monthly){
     const selected=picker.value;
-    const months=[...new Set([todayMonth(),...historyEntries().map(({set})=>set.date?.replaceAll('/','-').slice(0,7))])]
+    const months=[...new Set([todayMonth(),...archives().map(set=>set.date?.replaceAll('/','-').slice(0,7))])]
       .filter(month=>/^\d{4}-\d{2}$/.test(month)).sort().reverse();
     picker.replaceChildren(...months.map(month=>new Option(month.replace('-', '年')+'月',month)));
     picker.value=months.includes(selected)?selected:todayMonth();
   }
-  const from=$('statsFrom').value;
-  const to=$('statsTo').value;
+  const from=$(prefix+'From').value;
+  const to=$(prefix+'To').value;
   const now=new Date();
   const month=period==='previous'?new Date(now.getFullYear(),now.getMonth()-1,1):now;
-  const prefix=period==='year'?String(now.getFullYear()):month.getFullYear()+'/'+String(month.getMonth()+1).padStart(2,'0');
+  const datePrefix=period==='year'?String(now.getFullYear()):month.getFullYear()+'/'+String(month.getMonth()+1).padStart(2,'0');
   return set=>{
     if(period==='all')return true;
     if(monthly)return set.date?.replaceAll('/','-').slice(0,7)===picker.value;
-    if(period!=='range')return set.date?.startsWith(prefix);
+    if(period!=='range')return set.date?.startsWith(datePrefix);
     const day=set.date?.replaceAll('/','-');
     return Boolean(day&&(!from||day>=from)&&(!to||day<=to));
   };
@@ -625,14 +627,23 @@ function bindTableSort(id){
     $(id).tHead.querySelector('[data-sort-column="'+column+'"]').focus({preventScroll:true});
   };
 }
+function statsPeriodLabel(prefix='stats'){
+  const period=$(prefix+'Period');
+  const range=period.value==='monthly'?'（'+$(prefix+'Month').selectedOptions[0]?.textContent+'）':period.value==='range'?`（${$(prefix+'From').value||'指定なし'} ～ ${$(prefix+'To').value||'指定なし'}）`:'';
+  return period.selectedOptions[0].textContent+range;
+}
+function renderSetBreakdown(set){return TakechartSetView.render(set,{nameOf:p=>master.find(m=>m.id===p.masterId)?.name||p.name});}
 function renderStats(){
   const current=editing?.current||state;
   const history=historyEntries();
+  const statsHistory=archives().filter(set=>set&&!set.idle&&Array.isArray(set.players)&&Array.isArray(set.rounds)).map(set=>({set}));
   if(!current.idle&&current.date)history.push({set:current,index:null});
   const matches=statsDateFilter();
-  if(!$('ratingPanel').hidden)renderRatings(history.map(entry=>entry.set),matches);
+  $('totalsPanelContext').textContent=statsPeriodLabel()+' ・ '+$('totalsMode').selectedOptions[0].textContent;
+  $('ratingPanelContext').textContent='現在R：全期間 ・ '+$('ratingMode').selectedOptions[0].textContent;
+  if(!$('ratingPanel').hidden)renderRatings(statsHistory.map(entry=>entry.set),statsDateFilter('ratingTrend'));
   const mode=$('totalsMode').value;
-  const rows=aggregateStats(history.map(entry=>entry.set).filter(matches),mode).filter(r=>r.rankingVisible);
+  const rows=aggregateStats(statsHistory.map(entry=>entry.set).filter(matches),mode).filter(r=>r.rankingVisible);
   const rankCount=mode==='all'?0:roundSize(mode);
   const headings=['プレイヤー','累計ポイント','収支','通算セット数','通算半荘数','通算チップ','トップ率','ラス率',...Array.from({length:rankCount},(_,i)=>(i+1)+'着')];
   $('statsTable').innerHTML=sortedTable('statsTable',headings,rows,r=>{
@@ -646,7 +657,7 @@ function renderStats(){
   }).join('')+'</tbody>';
   bindTableSort('statsTable');
   $('exportPublicStats').hidden=readOnly||!$('ratingPanel').hidden;
-  $('exportPublicStats').onclick=()=>exportDisplayedStats(rows,history.some(entry=>entry.index===null&&matches(entry.set)));
+  $('exportPublicStats').onclick=()=>exportDisplayedStats(rows,false);
   const reversed=$('statsPeriod').value==='range'&&$('statsFrom').value&&$('statsTo').value&&$('statsFrom').value>$('statsTo').value;
   $('statsNote').textContent=reversed?'終了日は開始日以降にしてください。':rows.length?'通算半荘は点数を入力した回数です。着順と割合は対局人数分の点数がそろった半荘で集計します。同点は同順位です。':'まだ集計できるデータがありません。';
   history.sort((a,b)=>(b.set.date||'').localeCompare(a.set.date||'')||Number(b.set.sequence||0)-Number(a.set.sequence||0));
@@ -678,7 +689,7 @@ function renderStats(){
       ? `<button type="button" class="secondary history-share" aria-label="${shared===true?'共有リンクをコピー':'共有リンクを取得'}" data-share-set="${index}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7 .5l4-4a5 5 0 0 0-7-7l-2 2m2 6a5 5 0 0 0-7-.5l-4 4a5 5 0 0 0 7 7l2-2"/></svg>${shared===true?'リンクをコピー':'共有リンク'}</button>
          ${shared===false?'':`<button type="button" class="secondary" aria-label="共有リンクを無効化" data-revoke-set="${index}">無効化</button>`}`
       : '';
-    return `<details class="history-card" data-history-index="${index}"><summary>${esc(set.date||'日付不明')} - ${esc(set.sequence||1)} ${label}　${results.length}人 <span class="pill">${[...new Set(set.rounds.map(round=>roundLabel(round.mode)))].join(" ／ ")||"ルール未設定"}</span> ${shareBadge}</summary><p class="hint">ポイント倍率 ${esc(set.rate??"—")} ／ チップレート ${esc(set.chipRate??"—")} pt/枚</p>${edit||remove||sharing?`<div class="history-actions">${edit}${remove}${sharing}</div>`:''}<table class="history-table"><thead><tr><th>名前</th><th>pt</th><th>チップ</th><th>精算額</th></tr></thead><tbody>${results.map(r=>`<tr><td>${esc(r.name)}</td><td>${fmt(r.pt)}</td><td>${fmt(r.chips)}</td><td>${fmt(r.yen)}pt</td></tr>`).join('')}</tbody></table></details>`;
+    return `<details class="history-card" data-history-index="${index}"><summary>${esc(set.date||'日付不明')} - ${esc(set.sequence||1)} ${label}　${results.length}人 <span class="pill">${[...new Set(set.rounds.map(round=>roundLabel(round.mode)))].join(" ／ ")||"ルール未設定"}</span> ${shareBadge}</summary><p class="hint">ポイント倍率 ${esc(set.rate??"—")} ／ チップレート ${esc(set.chipRate??"—")} pt/枚</p>${edit||remove||sharing?`<div class="history-actions">${edit}${remove}${sharing}</div>`:''}<table class="history-table"><thead><tr><th>名前</th><th>pt</th><th>チップ</th><th>精算額</th></tr></thead><tbody>${results.map(r=>`<tr><td>${esc(r.name)}</td><td>${fmt(r.pt)}</td><td>${fmt(r.chips)}</td><td>${fmt(r.yen)}pt</td></tr>`).join('')}</tbody></table>${renderSetBreakdown(set)}</details>`;
   }).join(''):'<p class="hint">条件に合うセットはありません。</p>';
   $('historyPlayer').onchange=$('historyRule').onchange=renderStats;
   $('historyList').onclick=async e=>{
@@ -772,6 +783,7 @@ function calculateRatings(sets,mode){
 }
 let ratingPlayerId;
 function renderRatings(sets,matches){
+  $('ratingTrendPeriodContext').textContent=statsPeriodLabel('ratingTrend');
   const ratings=calculateRatings(sets,$('ratingMode').value);
   const rows=ratings.filter(p=>p.rankingVisible);
   $('ratingTable').innerHTML=sortedTable('ratingTable',['プレイヤー','現在R','対象半荘','直近'],rows,p=>[p.name,p.rating,p.history.length,p.change])+'<tbody>'+rows.map(p=>
@@ -799,14 +811,16 @@ function selectStatsView(rating){
 $('showTotals').onclick=()=>selectStatsView(false);
 $('showRating').onclick=()=>selectStatsView(true);
 $('ratingMode').onchange=renderStats;
+for(const id of ['ratingTrendPeriod','ratingTrendMonth','ratingTrendFrom','ratingTrendTo'])$(id).onchange=renderStats;
 $('ratingTable').onclick=e=>{
   const button=e.target.closest('[data-rating-player]');
   if(!button)return;
   ratingPlayerId=button.dataset.ratingPlayer;
-  renderRatings([...historyEntries().map(entry=>entry.set),editing?.current||state],statsDateFilter());
+  renderRatings(archives().filter(set=>set&&!set.idle),statsDateFilter('ratingTrend'));
   openPlayerStats(ratingPlayerId,button.textContent,$('ratingMode').value);
 };
 let selectedPlayerId;
+let playerStatsAllTime=false;
 let playerStatsMode='all';
 function renderPlayerTrends(sets){
   const series=[['ポイント','pt'],['チップ','枚'],['収支','pt']];
@@ -869,9 +883,9 @@ function renderOpponentStats(sets,mode){
 }
 function renderPlayerStats(){
   const current=editing?.current||state;
-  const matches=statsDateFilter();
+  const matches=playerStatsAllTime?()=>true:statsDateFilter();
   const mode=playerStatsMode;
-  const sets=[...historyEntries().map(entry=>entry.set),current].filter(matches);
+  const sets=archives().filter(set=>set&&!set.idle&&Array.isArray(set.players)&&Array.isArray(set.rounds)).filter(matches);
   if(mode==='trend'){
     sets.sort((a,b)=>(a.date||'').localeCompare(b.date||'')||Number(a.sequence||0)-Number(b.sequence||0));
     renderPlayerTrends(sets);
@@ -939,16 +953,18 @@ $('statsTable').onclick=e=>{
   if(!button)return;
   openPlayerStats(button.dataset.playerStats,button.textContent);
 };
-function openPlayerStats(id,name,mode='all'){
+function openPlayerStats(id,name,mode='all',allTime=false){
+  playerStatsAllTime=allTime;
   selectedPlayerId=id;
   $('playerStatsTitle').textContent=name+'の個人成績';
   const period=$('statsPeriod');
   const range=period.value==='monthly'?'（'+$('statsMonth').selectedOptions[0]?.textContent+'）':period.value==='range'?`（${$('statsFrom').value||'指定なし'} ～ ${$('statsTo').value||'指定なし'}）`:'';
-  $('playerStatsPeriod').textContent='集計期間 '+period.selectedOptions[0].textContent+range;
+  $('playerStatsPeriod').textContent=(playerStatsAllTime?'全期間':'集計期間 '+period.selectedOptions[0].textContent+range)+' ・ '+(mode==='trend'?'推移グラフ':mode==='all'?'すべて':roundLabel(mode));
   selectPlayerStatsTab(mode);
   $('playerStatsDialog').showModal();
 }
 function selectPlayerStatsTab(mode){
+  $('playerStatsPeriod').textContent=(playerStatsAllTime?'全期間':statsPeriodLabel())+' ・ '+(mode==='trend'?'推移グラフ':mode==='all'?'すべて':roundLabel(mode));
   playerStatsMode=mode;
   for(const tab of $('playerStatsTabs').querySelectorAll('[role="tab"]')){
     const selected=tab.dataset.mode===mode;
@@ -973,15 +989,19 @@ $('playerStatsTabs').onkeydown=e=>{
   tabs[target].focus();
 };
 $('statsFrom').onchange=$('statsTo').onchange=renderStats;
-function switchPage(page){const stats=page==='stats';$('sheetPage').hidden=stats;$('statsPage').hidden=!stats;$('tabStats').classList.toggle('active',stats);$('tabSheet').classList.toggle('active',!stats);if(stats)renderStats();window.scrollTo(0,0)}
-$('tabSheet').onclick=()=>switchPage('sheet');$('tabStats').onclick=()=>switchPage('stats');$('statsPeriod').onchange=$('statsMonth').onchange=$('totalsMode').onchange=renderStats;
+function switchPage(page){
+ for(const [name,panel,button]of[['sheet','sheetPage','tabSheet'],['stats','statsPage','tabStats'],['history','historyPage','tabHistory'],['settings','groupSettingsPage','tabSettings']]){
+  $(panel).hidden=page!==name;$(button).classList.toggle('active',page===name);$(button).setAttribute('aria-current',page===name?'page':'false');
+ }if(page==='stats'||page==='history')renderStats();window.scrollTo(0,0);
+}
+$('tabSheet').onclick=()=>switchPage('sheet');$('tabHistory').onclick=()=>switchPage('history');$('tabSettings').onclick=()=>switchPage('settings');$('tabStats').onclick=()=>switchPage('stats');$('statsPeriod').onchange=$('statsMonth').onchange=$('totalsMode').onchange=renderStats;
 if(!readOnly){
   try{backfillImportedPlayers()}catch{alert('雀簿のプレイヤーマスターを更新できませんでした。')}
 }
 if(cloud){
   if(readOnly){
     cloud.displayAppearance();
-    $('tabSheet').closest('nav').hidden=true;
+    $('tabSheet').hidden=true;$('tabSettings').hidden=true;
     $('importHistory').hidden=true;
     $('exportPublicStats').hidden=true;
     $('cloudControls').hidden=false;
@@ -992,6 +1012,125 @@ if(cloud){
     cloud.connect({ current:KEY, history:ARCHIVE_KEY, master:MASTER_KEY, notify:showSaveToast, onSaved:clearSavedMasterNotice });
   }
 }
+
+$('historyPage').append($('historySection'));
+$('groupSettingsPage').append($('masterSection'),$('dataSection'));
+$('groupSettingsLink').href=cloud?'./settings.html?'+new URLSearchParams({group:cloudId}):$('demoSettings').href;
+$('accountState').textContent=cloud?'ログイン中':'端末内のおためし卓';
+if(cloud){
+ $('accountLogout').hidden=false;
+ $('accountLogout').onclick=async()=>{
+  if($('cloudSave').disabled)return;
+  if((editing||cloud.hasUnsaved?.())&&!confirm('未送信の入力をこの端末に保護してログアウトします。DBには送信しません。よろしいですか？'))return;
+  $('accountLogout').disabled=true;
+  try{await protect('before-logout-input',{data:liveData(),draft:localStorage.getItem(historyEditKey)});await cloud.logout();location.replace('./account.html');}
+  catch(error){$('cloudStatus').textContent=error.message;}
+  finally{$('accountLogout').disabled=false;}
+ };
+}
+if(cloud?.conflict)$('workspacePages').inert=true;
+function liveData(){return JSON.parse(JSON.stringify({current:editing?.current||state,history:archives(),master}));}
+
+let identityBusy=false;
+// Date and sequence are display/share keys. archiveId remains the storage identity.
+let identityTarget, identityEditing;
+function setIdentityIssue(candidate){
+  const day=String(candidate.date||'').replaceAll('/','-');
+  const parsed=new Date(day+'T00:00:00Z');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||day.startsWith('0000')||Number.isNaN(parsed.getTime())||parsed.toISOString().slice(0,10)!==day)
+    return '有効な対局日を入力してください。';
+  if(!Number.isSafeInteger(candidate.sequence)||candidate.sequence<1)return '連番は1以上の整数で入力してください。';
+  const sameKey=set=>set&&!set.idle&&set.date===candidate.date&&Number(set.sequence)===candidate.sequence;
+  const duplicate=archives().some((set,index)=>{
+    if(editing?index===editing.index:state.archiveId&&set.archiveId===state.archiveId)return false;
+    return sameKey(set);
+  }) || Boolean(editing && !editing.current.idle && !(editing.current.archiveId&&editing.current.archiveId===state.archiveId) && sameKey(editing.current));
+  return duplicate?'同じ日付・番号のセットがあります。別の連番を入力してください。':'';
+}
+function validateSetIdentityForSave(){
+  const original=editing?JSON.parse(editing.original):archives().find(set=>state.archiveId&&set.archiveId===state.archiveId);
+  // Do not block unrelated edits to pre-existing legacy duplicates.
+  if(original&&original.date===state.date&&Number(original.sequence)===Number(state.sequence))return '';
+  return setIdentityIssue(state);
+}
+$('editSetIdentity').onclick=()=>{
+  if(state.idle||identityBusy||readOnly||cloud?.conflict||(cloud&&$('cloudSave').disabled))return;
+  identityTarget=state;identityEditing=editing;
+  $('setDate').value=state.date.replaceAll('/','-');
+  $('setSequence').value=state.sequence;
+  $('identityError').textContent='';
+  $('identityShareNote').hidden=!editing&&!state.archiveId;
+  $('setIdentityDialog').showModal();
+};
+$('cancelSetIdentity').onclick=()=>$('setIdentityDialog').close();
+$('setIdentityForm').onsubmit=async event=>{
+  event.preventDefault();
+  if(identityBusy||readOnly||cloud?.conflict||(cloud&&$('cloudSave').disabled))return;
+  if(state!==identityTarget||editing!==identityEditing){$('identityError').textContent='データが更新されました。閉じてから編集し直してください。';return;}
+  const raw=$('setSequence').value.trim();
+  const candidate={...JSON.parse(JSON.stringify(state)),date:$('setDate').value.replaceAll('-','/'),sequence:Number(raw)};
+  const issue=/^\d+$/.test(raw)?setIdentityIssue(candidate):'連番は1以上の整数で入力してください。';
+  if(issue){$('identityError').textContent=issue;return;}
+  if(candidate.date===state.date&&candidate.sequence===Number(state.sequence)){$('setIdentityDialog').close();return;}
+  identityBusy=true;$('workspacePages').inert=true;$('applySetIdentity').disabled=true;$('cancelSetIdentity').disabled=true;
+  try{
+    await protect('before-set-identity-edit',{data:liveData(),draft:localStorage.getItem(historyEditKey)});
+    if(state!==identityTarget||editing!==identityEditing)throw Error('changed');
+    if(editing)localStorage.setItem(historyEditKey,JSON.stringify({index:editing.index,original:editing.original,set:candidate}));
+    else storage.setItem(KEY,JSON.stringify(candidate));
+    state=candidate;
+    render();
+    $('setSaveIndicator').hidden=false;$('setSaveIndicator').textContent='日付・番号を端末に保護済み・未送信';
+    $('saveStatus').textContent='日付・番号を変更しました。「セットを保存」で反映します。';
+    $('setIdentityDialog').close();
+  }catch{
+    $('identityError').textContent='変更を安全に保存できませんでした。元の対局データは変更していません。';
+  }finally{
+    $('applySetIdentity').disabled=false;$('cancelSetIdentity').disabled=false;identityBusy=false;$('workspacePages').inert=Boolean(cloud?.conflict);
+  }
+};
+
+let recoveryCandidates=[];
+function recoveryData(record){
+ const body=record.data?.data||record.data;
+ if(body&&Object.hasOwn(body,'current')&&Array.isArray(body.history)&&Array.isArray(body.master))return {...body,current:body.current||fresh()};
+ if(Array.isArray(body?.entries)){
+  const values=Object.fromEntries(body.entries.map(([key,value])=>[key,JSON.parse(value)]));
+  return {current:values.current||fresh(),history:values.history||[],master:values.players||[]};
+ }
+}
+$('downloadRecovery').onclick=async()=>{
+ try{await protect('manual-export',{data:liveData(),draft:localStorage.getItem(historyEditKey)});await HanseiRecovery.download(recoveryScope);}
+ catch{$('recoveryInfo').textContent='書き出せませんでした。保存領域を確認してください。';}
+};
+$('listRecovery').onclick=async()=>{
+ try{
+  recoveryCandidates=(await HanseiRecovery.list(recoveryScope)).filter(record=>{try{const data=recoveryData(record);validateBackup({format:'takechao-backup',version:1,...data});return true;}catch{return false;}});
+  $('recoverySelection').replaceChildren(...recoveryCandidates.map(record=>new Option(new Date(record.savedAt).toLocaleString('ja-JP')+' ／ '+recoveryData(record).history.length+'セット',record.id)));
+  $('recoveryInfo').textContent=recoveryCandidates.length?'この卓の復旧コピーだけを表示しています。':'復元できるコピーはありません。';
+ }catch{$('recoveryInfo').textContent='復旧コピーを読み込めませんでした。';}
+};
+$('restoreRecovery').onclick=async()=>{
+ if(editing||readOnly||(cloud&&$('cloudSave').disabled)||cloud?.conflict||cloud?.hasPending?.())return;
+ const record=recoveryCandidates.find(record=>record.id===$('recoverySelection').value);if(!record)return;
+ const data=recoveryData(record);
+ if(!confirm(data.history.length+'セットを端末に戻します。現在のデータも保護し、DBには送信しません。よろしいですか？'))return;
+ try{
+  await protect('before-device-recovery',{data:liveData(),draft:localStorage.getItem(historyEditKey)});
+  storeBackup({format:'takechao-backup',version:1,...data});state=data.current;master=data.master;render();renderStats();
+  $('recoveryInfo').textContent='端末に復元しました。DBには未送信です。';
+ }catch{$('recoveryInfo').textContent='復元できませんでした。復旧コピーは残っています。';}
+};
+$('resumeHistoryDraft').onclick=()=>{
+ try{
+  const draft=JSON.parse(localStorage.getItem(historyEditKey)||'null');
+  if(!draft){$('recoveryInfo').textContent='編集中だった履歴入力はありません。';return;}
+  if(editing||readOnly)return;
+  if(JSON.stringify(archives()[draft.index])!==draft.original){$('recoveryInfo').textContent='元の履歴が更新されています。復旧コピーから内容を確認してください。';return;}
+  startHistoryEdit(draft.index);state=draft.set;render();$('setSaveIndicator').textContent='履歴の入力を復元しました・未送信';
+ }catch{$('recoveryInfo').textContent='保護していた入力を読み込めませんでした。';}
+};
+
 $('sheetApp').hidden=false;
 });
 </script></body></html>

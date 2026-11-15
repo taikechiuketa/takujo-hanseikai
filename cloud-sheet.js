@@ -13,6 +13,12 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
   if (error?.code === '42703') throw new Error('対局画面を開くには、追加のDB設定が必要です。');
   if (error || !group) throw new Error('この卓を開けませんでした。');
 
+  let releaseEditorLock;
+  db.auth.onAuthStateChange?.((event,session)=>{
+    if(event!=='SIGNED_OUT'&&(!session?.user||session.user.id===auth.user.id))return;
+    releaseEditorLock?.();
+    setTimeout(()=>{for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();const app=document.getElementById('sheetApp');if(app)app.hidden=true;const status=document.getElementById('cloudStatus');if(status){status.hidden=false;status.textContent='ログアウトしました。入力はこの端末に保護されています。';}const link=document.createElement('a');link.href='./account.html';link.textContent='ログイン画面へ';status?.after(link);},0);
+  });
   let savedName = group.name;
   let savedSettings = group.settings;
   const appearance = {
@@ -90,6 +96,10 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
   if (revisionError || latest.sheet_revision !== group.sheet_revision) {
     throw new Error('読み込み中に卓が更新されました。再読み込みしてください。');
   }
+  let allowLeaveAfterLogout=false;
+  const scope=auth.user.id+':'+groupId;
+  const protect=(kind,data)=>HanseiRecovery.checkpoint(scope,kind,data);
+  await protect('db-before-open',{current:group.sheet_draft,history,master:group.sheet_players,revision:group.sheet_revision});
   const el = id => document.getElementById(id);
   const status = el('cloudStatus');
   const storageData = new Map([
@@ -102,6 +112,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
   const recoveryKey = 'hansei-sheet-draft:' + auth.user.id + ':' + groupId;
   let recovery;
   try { if (!readOnly) recovery = JSON.parse(localStorage.getItem(recoveryKey)); } catch {}
+  if(recovery)await protect('device-before-open',recovery);
   const sameBase = recovery && recovery.revision === group.sheet_revision;
   const alreadySaved = Boolean(recovery?.pending) && recovery.pending.payload.request_id === group.sheet_revision;
   const restore = sameBase || alreadySaved;
@@ -115,8 +126,23 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
     setItem(key, value) { storageData.set(key, value); changed(); },
     removeItem(key) { storageData.delete(key); changed(); },
   };
+  if(!readOnly&&navigator.locks){
+    await new Promise((resolve,reject)=>{
+      navigator.locks.request('hansei-recording:'+scope,{ifAvailable:true},async lock=>{
+        if(!lock){reject(Error('同じ卓の記録画面が別タブで開いています。先に閉じてください。'));return;}
+        resolve();await new Promise(release=>{releaseEditorLock=release;});
+      }).catch(reject);
+    });
+    window.addEventListener('pagehide',()=>releaseEditorLock?.());
+  }
   return {
-    storage,
+    storage,scope,protect,conflict:Boolean(conflict),
+    async logout(){
+      await protect('before-logout',{entries:[...storageData],recovery:JSON.parse(localStorage.getItem(recoveryKey)||'null')});
+      const {error}=await db.auth.signOut({scope:'local'});
+      if(error)throw Error('ログアウトを完了できませんでした。入力はこの端末に保持しています。');
+      allowLeaveAfterLogout=true;
+    },
     isShared: set => sharing.get(shareKey(set)),
     async shareSet(set, revoke) {
       const { data, error } = await db.from('game_sets').select('id,details')
@@ -159,6 +185,8 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
       const snapshot = () => JSON.stringify([...storageData]);
       let lastSaved = restore ? (alreadySaved ? recovery.pending.snapshot : serverSnapshot) : snapshot();
       let revision = group.sheet_revision;
+      this.hasPending=()=>Boolean(pending);
+      this.hasUnsaved=()=>Boolean(pending)||snapshot()!==lastSaved;
       this.hasUnsavedPlayers = () => Boolean(conflict) ||
         new Map(JSON.parse(lastSaved)).get(keys.master) !== storage.getItem(keys.master);
       let pending = sameBase ? recovery.pending : undefined;
@@ -187,7 +215,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
             : snapshot() === lastSaved ? 'DB保存済み' : status.textContent);
         }
       };
-      status.textContent = restore ? 'この端末の下書きを復元しました。' : '';
+      status.textContent = restore ? 'この端末の下書きを復元しました。' : '保存済みデータを読み込みました。';
       button.hidden = !pending;
       if (conflict) {
         button.hidden = false;
@@ -212,7 +240,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
         return;
       }
       window.addEventListener('beforeunload', event => {
-        if (pending || snapshot() !== lastSaved) {
+        if (!allowLeaveAfterLogout && (pending || snapshot() !== lastSaved)) {
           event.preventDefault();
           event.returnValue = '';
         }
@@ -226,6 +254,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
         const nextRevision = crypto.randomUUID();
         button.disabled = true;
         try {
+          await protect('before-player-save',{entries:[...storageData],revision});
           let confirmed = false;
           try {
             const query = db.from('groups').update({
@@ -278,12 +307,16 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
             },
           };
         }
-        keepDraft();
+        if(!keepDraft()){
+          button.hidden=false;status.textContent='入力をこの端末に保護できないため送信を止めました。バックアップしてください。';showSetStatus(status.textContent);return;
+        }
         button.disabled = true;
         button.hidden = true;
         status.textContent = '保存中…';
         showSetStatus(status.textContent);
         try {
+          await protect('db-before-save',{entries:JSON.parse(lastSaved),revision});
+          await protect('before-save',{entries:[...storageData],revision,pending});
           const { data, error: saveError } = await db.rpc('save_sheet_workspace', pending.payload);
           if (saveError) {
             if (saveError.code === '40001') {

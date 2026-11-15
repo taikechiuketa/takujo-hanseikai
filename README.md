@@ -1,9 +1,12 @@
 # 卓上反省会
 
-事業用の独立プロジェクト。個人用たけチャートとはリポジトリ、配信オリジン、ブラウザ保存キー、将来のSupabaseプロジェクトを分ける。配信先の新設まではローカルで試用する。
+グループごとの麻雀成績を記録・共有するWebアプリ。個人版たけチャートとはリポジトリ・DB・認証・保存キーを分離しています。
 
-`python -m http.server 8000` を実行し、ブラウザで http://localhost:8000/ を開く。
+- [ログイン・マイグループ](https://taikechiuketa.github.io/takujo-hanseikai/account.html)
+- [画面説明](docs/screen-guide.md)
+- [仕様書](docs/specification.md)
+- [たけチャートUI改善の適用・ロールバック](docs/ui-port-20261116.md)
 
-[画面説明](docs/screen-guide.md) · [仕様書](docs/specification.md)
+開発時は `python3 -m http.server 8000` で配信し、`index.html?local=1` を開くと明示的な端末内試用ができます。クラウドの卓にはgroupパラメーターとログインが必要です。
 
-運営者向けの利用状況画面を追加しました。
+テストはNode 22以降で `npm ci && npm test`。テストは擬似アカウント・卓・RPCを使用します。

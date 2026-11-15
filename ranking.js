@@ -106,12 +106,16 @@ async function showSharedRanking() {
       content.append(element('p', '公開されている成績項目はありません。'));
       return;
     }
-    const rows = data[section];
-    const selected = data.options[section];
+    const rating=section==='rating';
+    el('rankingPeriodLabel').hidden=rating;
+    el('ratingAllTimeNote').hidden=!rating;
+    const source=rating?(data.ratingSource||data):data;
+    const rows = source[section];
+    const selected = source.options[section];
     const fields = Object.fromEntries(Object.entries(rankingFields[section])
       .filter(([key]) => selected.includes(key) && !['trend','opponents'].includes(key)));
     const heading = element('h2', rankingSections[section]);
-    const caption = element('p', filterCaption());
+    const caption = element('p', section==='rating'?'現在R：全期間 ・ '+mode.selectedOptions[0].textContent:filterCaption());
     caption.className = 'hint';
     content.append(heading, caption);
     if (!rows.length) {
@@ -124,12 +128,27 @@ async function showSharedRanking() {
 
     };
     const ratingTrend = element('div');
+    let selectedTrend;
+    const trendSection=element('section');trendSection.className='rating-trend-section';
+    const trendLabel=element('label','R推移の表示期間 ');
+    const trendPeriod=element('select');trendPeriod.id='publicRatingTrendPeriod';
+    trendPeriod.append(new Option('全期間',''),...[...new Set(data.months||[])].sort().reverse().map(month=>new Option(month,month)));
+    trendLabel.append(trendPeriod);
+    trendSection.append(element('h3','R推移'),element('p','この期間は推移だけに適用します。上の現在Rは全期間です。'),trendLabel,ratingTrend);
+    ratingTrend.textContent='プレイヤー名を選ぶとR推移を表示します。';
+    function drawTrend(){
+      if(!selectedTrend)return;
+      const all=selectedTrend.trend.map((point,index)=>({...point,date:point.date.replaceAll('-','/'),before:point.before??(index?selectedTrend.trend[index-1].rating:1500)}));
+      const points=all.filter(point=>!trendPeriod.value||point.date.replaceAll('/','-').startsWith(trendPeriod.value));
+      ratingTrend.innerHTML=points.length?rankingCharts.rating(selectedTrend.name,points):'この期間のR推移はありません。';
+    }
+    trendPeriod.onchange=drawTrend;
     table(content, rows, columns, {
       id: section === 'rating' ? 'ratingTable' : 'statsTable',
       renderCell(cell, key, row) {
         if (key === 'name') {
-          const personalRows = data.personal?.filter(player => player.name === row.name) ?? [];
-          const hasTrend = section === 'rating' && row.trend?.length;
+          const personalRows = source.personal?.filter(player => player.name === row.name) ?? [];
+          const hasTrend = section === 'rating' && selected.includes('trend') && row.trend?.length;
           if (!personalRows.length && !hasTrend) return false;
           const link = element('button', row.name);
           link.type = 'button';
@@ -140,15 +159,10 @@ async function showSharedRanking() {
           link.append(arrow);
           link.onclick = () => {
             if (hasTrend) {
-              ratingTrend.replaceChildren();
-              const points = row.trend.map((point, index) => ({
-                ...point,
-                date: point.date.replaceAll('-', '/'),
-                before: point.before ?? row.trend[Math.max(0, index - 1)].rating,
-              }));
-              ratingTrend.innerHTML = rankingCharts.rating(row.name, points);
+              selectedTrend=row;
+              drawTrend();
             }
-            if (personalRows.length) openPersonal(data, row.name, personalRows, section === 'rating' ? mode.value : 'all');
+            if (personalRows.length) openPersonal(source, row.name, personalRows, section === 'rating' ? mode.value : 'all',section==='rating');
           };
           cell.append(link);
           return true;
@@ -156,7 +170,7 @@ async function showSharedRanking() {
         return false;
       },
     });
-    if (section === 'rating') content.append(ratingTrend);
+    if (section === 'rating' && selected.includes('trend')) content.append(trendSection);
   }
   function renderPersonal(body, data, rows, trend) {
     body.replaceChildren();
@@ -197,12 +211,12 @@ async function showSharedRanking() {
       body.append(card);
     });
   }
-  function openPersonal(data, name, rows, initialMode) {
+  function openPersonal(data, name, rows, initialMode,allTime=false) {
     const dialog = el('playerStatsDialog');
     const body = el('playerStatsResults');
     const nav = el('playerStatsTabs');
     const tabs = [...nav.querySelectorAll('button')];
-    const month = period.value;
+    const month = allTime?'':period.value;
     const datasets = new Map([[mode.value, Promise.resolve({data, rows})]]);
     el('playerStatsTitle').textContent = name + 'の個人成績';
     tabs.find(tab => tab.dataset.mode === 'trend').hidden =
@@ -217,7 +231,7 @@ async function showSharedRanking() {
         item.tabIndex = active ? 0 : -1;
       }
       body.setAttribute('aria-labelledby', tab.id);
-      el('playerStatsPeriod').textContent = period.selectedOptions[0].textContent + ' ・ ' + tab.textContent;
+      el('playerStatsPeriod').textContent = (allTime?'全期間':period.selectedOptions[0].textContent) + ' ・ ' + tab.textContent;
       if (!datasets.has(target)) {
         datasets.set(target, (async () => {
           const response = await db.rpc('get_shared_group_stats', {
@@ -273,6 +287,12 @@ async function showSharedRanking() {
         el('rankingTitle').textContent = '卓上反省会';
         status.textContent = 'このランキングの共有リンクは無効です。';
         return;
+      }
+      // Never recompute the current rating from a selected month's subset.
+      if(month&&Array.isArray(data.rating)){
+        const all=await db.rpc('get_shared_group_stats',{share_token:token,target_month:null,target_mode:mode.value});
+        if(all.error||!all.data||all.data.group!==data.group||JSON.stringify(all.data.options)!==JSON.stringify(data.options))throw Error('公開設定が更新されています。再読み込みしてください。');
+        data={...data,rating:all.data.rating,ratingSource:all.data};
       }
       el('rankingTitle').textContent = data.group;
       const months = [...new Set([currentMonth, ...data.months])].sort().reverse();
