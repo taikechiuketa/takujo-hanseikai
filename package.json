@@ -2,7 +2,7 @@
   "name": "takujo-hanseikai",
   "private": true,
   "scripts": {
-    "test": "node tests/ui-port.test.cjs && node tests/cloud-safety.test.cjs && node tests/public-ui.test.cjs && node tests/community-ui.test.cjs && node tests/push-ui.test.cjs && node tests/community-context.test.cjs"
+    "test": "node tests/ui-port.test.cjs && node tests/cloud-safety.test.cjs && node tests/public-ui.test.cjs && node tests/community-ui.test.cjs && node tests/push-ui.test.cjs && node tests/community-context.test.cjs && node tests/pwa.test.cjs"
   },
   "devDependencies": {
     "fake-indexeddb": "6.2.8",

@@ -1,14 +1,22 @@
 <!doctype html>
 <html lang="ja">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>卓上反省会｜グループ管理</title>
+<meta name="theme-color" content="#5436ba">
+<link rel="manifest" href="./app.webmanifest">
+<link rel="apple-touch-icon" href="./community-icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script src="./pwa-init.js" defer></script>
 <link rel="stylesheet" href="./account.css?v=lavender-1">
+</head><body>
 <main>
 <header class="masthead">
 <div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 <div><p class="eyebrow">MAHJONG SCOREBOOK</p><h1>卓上反省会</h1><p class="tagline">いつものメンツの、麻雀成績帳。</p></div>
 </header>
+<div><button id="installApp" type="button" hidden>アプリをインストール</button><p id="pwaInstallStatus" role="status"></p></div>
 <p id="status" role="status" aria-live="polite"></p>
 <section id="login" hidden>
 <div class="welcome-intro">
@@ -40,4 +48,4 @@
 </main>
 <script src="./vendor/supabase-2.119.0.js"></script>
 <script type="module" src="./account.js?v=group-push-20261116"></script>
-</html>
+</body></html>

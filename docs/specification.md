@@ -166,6 +166,14 @@ Web Pushは卓上反省会専用のVAPID鍵とService Workerを使う。秘密�
 
 ### 端末保存と検証
 
-名前・端末乱数はhansei-community-name-v1 / hansei-community-device-v1、通知ON/OFFはhansei-community-push-v1:room、最後の卓と最大20件の訪問卓はhansei-community-last-share / hansei-community-visitedを使う。既存の対局用保存キーやたけチャートの保存キーは読み書きしない。PWAは固定のid・scopeを使い、manifestのstart_urlを省略して追加元のドキュメントURLを既定起動URLにする。共有tokenを含むフラグメントを起動時にも維持し、Safariとホーム画面アプリで保存領域が異なる場合も卓を特定できる。フラグメントのないcommunity.htmlを開いた場合は最後に確認した卓を端末保存から選ぶ。チャットは表示中に約5秒、募集一覧は約15秒ごとに更新する。
+名前・端末乱数はhansei-community-name-v1 / hansei-community-device-v1、通知ON/OFFはhansei-community-push-v1:room、最後の卓と最大20件の訪問卓はhansei-community-last-share / hansei-community-visitedを使う。既存の対局用保存キーやたけチャートの保存キーは読み書きしない。PWAは管理者用app.webmanifest（id/start_url: account.html）と募集用community.webmanifest（id/start_url: community.html）を分け、scopeはともに./を明記する。Chromeのインストール要件に合わせてstart_urlを明示する。募集の起動時は保存済みの最後の卓を選び、保存領域が別などで特定できない場合は共有リンク入力を表示する。チャットは表示中に約5秒、募集一覧は約15秒ごとに更新する。
 
 既存成績・復旧・共有のテストに加え、募集UI、通知OFFと再試行、管理／共有の入口、他卓の読み書き拒否、卓内だけへの通知、共有無効化時の拒否、Workersの暗号化・送信とD1 batchを検証する。実スマホへの最終的な通知表示は、各利用端末のテスト通知で確認する。
+
+### PWAのインストール要件修正（2026年11月16日）
+
+account.htmlのheadに管理用manifest、theme-color、apple-touch-iconを追加。pwa-init.jsで同じcommunity-sw.jsを登録し、beforeinstallpromptが発生した場合だけインストールボタンを表示する。promptはユーザーがボタンを押したときにのみ呼び、受付・キャンセル・appinstalledを区別して案内する。既存スコアのfetchやキャッシュは介入しない。
+
+各manifestは同一originの200を返す起動ページ、192/512ピクセルのPNG、固定id、standalone、scopeを指定する。管理用と募集用を別のidにして、管理者アプリが募集ページへ固定されることを防ぐ。共有リンクはmanifestの起動URLやHTTPクエリに埋め込まない。
+
+初回起動の共有リンク入力は、現在originの/takujo-hanseikai/ranking.htmlまたはcommunity.htmlとUUID形式フラグメントだけを許可する。他origin・他ページ・不正なtoken形式は拒否し、eventがUUIDの場合だけ同じ募集へ引き継ぐ。元の共有状態のサーバー検証は維持する。初期化失敗時は未完了の募集一覧を隠し、案内とリンク入力を残す。マニフェスト、起動先、アイコン寸法、インストール操作、共有リンクの検証をテストする。
