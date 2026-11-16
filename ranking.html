@@ -7,12 +7,14 @@
 <title>卓ランキング｜卓上反省会</title>
 <link rel="stylesheet" href="./sheet.css"><link rel="stylesheet" href="./score-view.css">
 <script defer src="./vendor/supabase-2.119.0.js"></script>
+<script defer src="./pwa-init.js"></script>
 <script defer src="./ranking-options.js"></script>
 <script defer src="./ranking-charts.js?v=1"></script>
 <script defer src="./ranking.js?v=group-push-20261116"></script>
 </head>
 <body><main>
 <header class="brand-header"><div><h1 id="rankingTitle">卓上反省会</h1><p>卓上反省会 ／ 公開成績</p></div></header>
+<div><button id="installApp" type="button" hidden>アプリをインストール</button><p id="pwaInstallStatus" role="status"></p></div>
 <p id="rankingStatus" role="status">成績を読み込み中…</p>
 <section id="rankingPanel" class="card" hidden>
 <p><a id="rankingCommunityLink" hidden>参加募集・チャット・通知</a></p><nav id="rankingNavigation" class="navtabs" aria-label="成績の種類"></nav><p id="ratingAllTimeNote" class="hint" hidden>現在R・対象半荘・直近の増減は全期間の値です。</p><div class="stats-filter">

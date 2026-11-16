@@ -1,9 +1,10 @@
 const {JSDOM}=require('jsdom');const assert=require('node:assert/strict');const fs=require('node:fs');
 const base='https://taikechiuketa.github.io/takujo-hanseikai/';
-for(const [page,file,start] of [['account.html','app.webmanifest','account.html'],['community.html','community.webmanifest','community.html']]){
+for(const [page,file,start] of [['account.html','app.webmanifest','account.html'],['community.html','community.webmanifest','community.html'],['ranking.html','community.webmanifest','community.html']]){
  const dom=new JSDOM(fs.readFileSync(page,'utf8'),{url:base+page});const link=dom.window.document.head.querySelector('link[rel=manifest]');assert.ok(link,`${page} must link its manifest from head`);assert.ok(link.href.endsWith('/'+file));const m=JSON.parse(fs.readFileSync(file));assert.equal(new URL(m.start_url,base+file).href,base+start);assert.ok(m.name&&m.short_name&&m.id);assert.equal(m.display,'standalone');assert.equal(m.scope,'./');
  for(const size of [192,512]){const icon=m.icons.find(i=>i.sizes===size+'x'+size);assert.ok(icon);const bytes=fs.readFileSync(icon.src.replace('./',''));assert.equal(bytes.subarray(1,4).toString(),'PNG');assert.equal(bytes.readUInt32BE(16),size);assert.equal(bytes.readUInt32BE(20),size);}dom.window.close();
 }
+const ranking=new JSDOM(fs.readFileSync('ranking.html','utf8'));assert.ok(ranking.window.document.querySelector('script[src="./pwa-init.js"]'));assert.ok(ranking.window.document.getElementById('installApp'));ranking.window.close();
 (async()=>{
  let dom=new JSDOM(fs.readFileSync('account.html','utf8'),{url:base+'account.html',runScripts:'outside-only'}),w=dom.window,registered=0,prompted=0;
  Object.defineProperty(w.navigator,'serviceWorker',{value:{register:async(url,options)=>{registered++;assert.equal(url,'./community-sw.js');assert.equal(options.scope,'./');}}});w.eval(fs.readFileSync('pwa-init.js','utf8'));assert.equal(registered,1);assert.equal(w.document.getElementById('installApp').hidden,true);
