@@ -49,7 +49,7 @@ async function start() {
       settings.href = './settings.html?' + new URLSearchParams({ group: group.id });
       const actions = document.createElement('div');
       actions.className = 'table-actions';
-      actions.append(play, settings);
+      const community=document.createElement('a');community.className='secondary-link';community.textContent='参加募集・通知';community.href='./community.html?'+new URLSearchParams({group:group.id});actions.append(play,community,settings);
       const identity = document.createElement('div');
       identity.className = 'table-identity';
       const icon = document.createElement('span');

@@ -19,6 +19,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
     releaseEditorLock?.();
     setTimeout(()=>{for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();const app=document.getElementById('sheetApp');if(app)app.hidden=true;const status=document.getElementById('cloudStatus');if(status){status.hidden=false;status.textContent='ログアウトしました。入力はこの端末に保護されています。';}const link=document.createElement('a');link.href='./account.html';link.textContent='ログイン画面へ';status?.after(link);},0);
   });
+  const communityLink=document.getElementById('groupCommunityLink');if(communityLink){communityLink.href='./community.html?'+new URLSearchParams({group:groupId});communityLink.hidden=false;}
   let savedName = group.name;
   let savedSettings = group.settings;
   const appearance = {

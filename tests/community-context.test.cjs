@@ -1,0 +1,12 @@
+const {JSDOM}=require('jsdom');const fs=require('node:fs');const assert=require('node:assert/strict');const vm=require('node:vm');
+const code=fs.readFileSync('community-context.js','utf8');const share='11111111-1111-4111-8111-111111111111',group='22222222-2222-4222-8222-222222222222';
+function windowAt(url){const dom=new JSDOM('<p id="globalStatus"></p>',{url,runScripts:'outside-only'});dom.window.eval(code);return dom;}
+(async()=>{
+ let dom=windowAt('https://taikechiuketa.github.io/takujo-hanseikai/community.html#'+share);assert.equal((await dom.window.HanseiCommunityContext()).share,share);dom.window.close();
+ dom=windowAt('https://taikechiuketa.github.io/takujo-hanseikai/community.html');dom.window.localStorage.setItem('hansei-community-last-share',share);assert.equal((await dom.window.HanseiCommunityContext()).share,share);dom.window.close();
+ dom=windowAt('https://taikechiuketa.github.io/takujo-hanseikai/community.html?group='+group);let enabled=false,reads=[];dom.window.supabase={createClient:()=>({auth:{getUser:async()=>({data:{user:{id:'owner'}}})},from(table){reads.push(table);const query={select(){return query},eq(){return query},async maybeSingle(){return{data:table==='groups'?{id:group,name:'卓A'}:enabled?{token:share}:null,error:null}}};return query;}})};
+ await assert.rejects(()=>dom.window.HanseiCommunityContext(),/ランキングページの共有/);assert.ok(dom.window.document.querySelector('a').href.includes('settings.html?group='));enabled=true;assert.equal((await dom.window.HanseiCommunityContext()).share,share);assert.ok(reads.every(t=>['groups','group_ranking_shares'].includes(t)));dom.window.close();
+ const events={},opened=[];let scoreNavigations=0;const base='https://taikechiuketa.github.io/takujo-hanseikai/';const self={location:{href:base+'community-sw.js'},addEventListener:(name,fn)=>events[name]=fn,clients:{matchAll:async()=>[{url:base+'index.html?group='+group,navigate:async()=>scoreNavigations++,focus:async()=>{}}],openWindow:async url=>opened.push(url)}};
+ vm.runInNewContext(fs.readFileSync('community-sw.js','utf8'),{self,URL});let pending;events.notificationclick({notification:{close(){},data:{url:base+'community.html?event=test#'+share}},waitUntil:p=>pending=p});await pending;assert.equal(scoreNavigations,0);assert.equal(opened[0],base+'community.html?event=test#'+share);
+ console.log('Community context: shared/owner entry, disabled sharing, PWA startup and score-safe notification navigation passed.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

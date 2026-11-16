@@ -283,7 +283,7 @@ async function showSharedRanking() {
       }
       if (error) throw error;
       if (!data) {
-        panel.hidden = true;
+        panel.hidden = true;const communityLink=el('rankingCommunityLink');if(communityLink)communityLink.hidden=true;
         el('rankingTitle').textContent = '卓上反省会';
         status.textContent = 'このランキングの共有リンクは無効です。';
         return;
@@ -295,6 +295,7 @@ async function showSharedRanking() {
         data={...data,rating:all.data.rating,ratingSource:all.data};
       }
       el('rankingTitle').textContent = data.group;
+      const communityLink=el('rankingCommunityLink');if(communityLink){communityLink.href='./community.html#'+token;communityLink.hidden=false;}try{localStorage.setItem('hansei-community-last-share',token);}catch{}
       const months = [...new Set([currentMonth, ...data.months])].sort().reverse();
       period.replaceChildren(...months.map(value =>
         new Option(value === currentMonth ? value + '（今月）' : value, value)), new Option('通算', ''));
