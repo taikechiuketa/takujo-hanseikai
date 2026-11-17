@@ -30,7 +30,7 @@ async function start() {
     el('groups').hidden = !userId;
     if (!userId) return;
 
-    const { data, error } = await db.from('groups').select('id,name').order('created_at');
+    const { data, error } = await db.from('groups').select('id,name,owner_id').order('created_at');
     if (version !== refreshVersion) return;
     if (error) throw error;
     if (!data.length) el('groupList').append(Object.assign(document.createElement('li'), { className: 'empty-state', textContent: 'まだ卓がありません。下のフォームから最初のグループを作成できます。' }));
@@ -47,16 +47,19 @@ async function start() {
       settings.className = 'secondary-link';
       settings.textContent = '卓の設定';
       settings.href = './settings.html?' + new URLSearchParams({ group: group.id });
+      const isOwner=group.owner_id===userId;settings.hidden=!isOwner;
+      const members=document.createElement('a');members.className='secondary-link';members.textContent=isOwner?'入力メンバー管理':'自分の入力権限';members.href='./members.html?'+new URLSearchParams({group:group.id});
+      const role=document.createElement('small');role.textContent=isOwner?'管理者':'入力メンバー';
       const actions = document.createElement('div');
       actions.className = 'table-actions';
-      const community=document.createElement('a');community.className='secondary-link';community.textContent='参加募集・通知';community.href='./community.html?'+new URLSearchParams({group:group.id});actions.append(play,community,settings);
+      const community=document.createElement('a');community.className='secondary-link';community.textContent='参加募集・通知';community.href='./community.html?'+new URLSearchParams({group:group.id});actions.append(play,community,settings,members);
       const identity = document.createElement('div');
       identity.className = 'table-identity';
       const icon = document.createElement('span');
       icon.className = 'table-icon';
       icon.setAttribute('aria-hidden', 'true');
       icon.textContent = Array.from(group.name.trim())[0] || '卓';
-      identity.append(icon, name);
+      identity.append(icon, name, role);
       item.append(identity, actions);
       el('groupList').append(item);
     }

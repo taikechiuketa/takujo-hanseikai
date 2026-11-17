@@ -52,14 +52,14 @@ async function startUsageDashboard() {
     }
     target.replaceChildren(table);
   }
-  const groupHeadings = ['卓名','初回対局日','最終対局日','終了セット','半荘数','利用段階'];
+  const groupHeadings = ['卓名','登録メンバー数（管理者含む）','管理者','入力メンバー','初回対局日','最終対局日','終了セット','半荘数','利用段階'];
   const groupRows = groups => groups.map(group => [
-    group.name,group.first_day,group.last_day,group.sets,group.rounds,
+    group.name,group.member_count??1,group.owner_email||group.owner_id,(group.members||[]).filter(m=>m.role==='editor').map(m=>m.email||m.user_id).join('、')||'なし',group.first_day,group.last_day,group.sets,group.rounds,
     stages[group.days>1?'returning':group.days?'first':'created'],
   ]);
   function renderUsers(report) {
     const users = report.users.filter(user => !stage.value || user.stage === stage.value);
-    table('usageUsers',['ユーザー','登録日','メール確認','管理卓','終了セット','半荘数','最終対局日','利用段階'],users.map(user => {
+    table('usageUsers',['ユーザー','登録日','メール確認','所属グループ','管理グループ','入力・更新回数','所属卓の終了セット','半荘数','最終対局日','利用段階'],users.map(user => {
       const link = node('button','詳細');
       link.type = 'button';
       link.className = 'secondary';
@@ -68,12 +68,12 @@ async function startUsageDashboard() {
       link.onclick = () => {
         el('userDetailTitle').textContent = label;
         el('userDetailEmail').textContent = user.email || 'メールアドレスなし';
-        table('userDetailGroups',groupHeadings,groupRows(report.groups.filter(group => group.owner_id===user.id)));
+        table('userDetailGroups',groupHeadings,groupRows(report.groups.filter(group => group.owner_id===user.id||(group.members||[]).some(m=>m.user_id===user.id))));
         el('userDetail').showModal();
       };
       const identity = node('span',label+' ');
       identity.append(link);
-      return [identity,user.registered,user.confirmed?'確認済み':'未確認',user.tables,user.sets,user.rounds,user.last_day,stages[user.stage]];
+      return [identity,user.registered,user.confirmed?'確認済み':'未確認',user.tables,user.owned_tables??user.tables,user.edits??0,user.sets,user.rounds,user.last_day,stages[user.stage]];
     }));
   }
   let request = 0;
@@ -90,10 +90,10 @@ async function startUsageDashboard() {
       return;
     }
     const {totals,funnel,retention} = data;
-    cards('usageKpis',[['累計登録ユーザー',totals.registered],['新規登録',totals.newUsers],
+    cards('usageKpis',[['累計登録ユーザー',totals.registered],['新規登録',totals.newUsers],['グループ総数',totals.totalGroups??data.groups.length],
       ['利用ユーザー',totals.activeUsers],['稼働卓',totals.activeGroups],['終了セット',totals.sets],['半荘数',totals.rounds]]);
     cards('usageFunnel',[['登録',funnel.registered],['メール確認',funnel.confirmed],
-      ['卓作成',funnel.created],['初回セット終了',funnel.finished],
+      ['グループ所属',funnel.created],['初回セット終了',funnel.finished],
       ['初回までの中央値',funnel.medianDays == null ? null : funnel.medianDays + '日']]);
     el('usageRetention').textContent = '30日以内の再利用　'+retention.eligible+'卓中'+retention.returned+'卓（観測中 '+retention.observing+'卓）';
     table('usageWeeks',['週の開始日','新規登録','稼働卓','終了セット'],data.weeks.map(w=>[w.week,w.registrations,w.tables,w.sets]));

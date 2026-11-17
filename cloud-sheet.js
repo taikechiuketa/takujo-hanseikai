@@ -9,10 +9,12 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
   const { data: auth, error: authError } = await db.auth.getUser();
   if (authError || !auth.user) throw new Error('ログインしてから卓を開いてください。');
   const { data: group, error } = await db.from('groups')
-    .select(settingsOnly ? 'name,settings' : 'name,settings,sheet_revision,sheet_draft,sheet_players').eq('id', groupId).maybeSingle();
+    .select(settingsOnly ? 'name,settings,owner_id' : 'name,settings,owner_id,sheet_revision,sheet_draft,sheet_players').eq('id', groupId).maybeSingle();
   if (error?.code === '42703') throw new Error('対局画面を開くには、追加のDB設定が必要です。');
   if (error || !group) throw new Error('この卓を開けませんでした。');
 
+  const isOwner=group.owner_id===auth.user.id;
+  if(settingsOnly&&!isOwner)throw new Error('卓の設定は管理者だけが変更できます。マイグループの「対局を入力」から開いてください。');
   let releaseEditorLock;
   db.auth.onAuthStateChange?.((event,session)=>{
     if(event!=='SIGNED_OUT'&&(!session?.user||session.user.id===auth.user.id))return;
@@ -23,6 +25,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
   let savedName = group.name;
   let savedSettings = group.settings;
   const appearance = {
+    isOwner,
     id: 'cloud:' + auth.user.id + ':' + groupId,
     name: group.name,
     settings: group.settings,
@@ -51,6 +54,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
       if (error || !data) throw new Error('削除を確認できませんでした。グループ一覧を開き直して確認してください。');
     },
     async save(next) {
+      if(!isOwner)throw new Error('卓の設定は管理者だけが変更できます。');
       const settings = { ...savedSettings, theme: next.theme, headerColor: next.headerColor, headerMode: next.headerMode, rules: next.rules };
       const { data, error } = await db.from('groups').update({ name: next.name, settings })
         .eq('id', groupId).eq('name', savedName).eq('settings', JSON.stringify(savedSettings))
@@ -146,6 +150,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
     },
     isShared: set => sharing.get(shareKey(set)),
     async shareSet(set, revoke) {
+      if(!isOwner&&(revoke||sharing.get(shareKey(set))!==true))throw new Error('共有リンクの発行・無効化は管理者だけが行えます。');
       const { data, error } = await db.from('game_sets').select('id,details')
         .eq('group_id', groupId).eq('played_on', set.date.replaceAll('/', '-'))
         .eq('sequence', set.sequence).eq('status', 'finished').maybeSingle();
@@ -258,13 +263,13 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
           await protect('before-player-save',{entries:[...storageData],revision});
           let confirmed = false;
           try {
-            const query = db.from('groups').update({
-              sheet_players: JSON.parse(players), sheet_revision: nextRevision,
-            }).eq('id', groupId);
-            const { data, error } = await (revision === null
-              ? query.is('sheet_revision', null)
-              : query.eq('sheet_revision', revision)).select('id').maybeSingle();
-            confirmed = !error && Boolean(data);
+            const result=await db.rpc('save_sheet_players',{target_group:groupId,expected_revision:revision,request_id:nextRevision,players:JSON.parse(players)});
+            if(result.error?.code==='PGRST202'&&isOwner){
+              // Existing owner-only DB remains usable until the membership migration is applied.
+              const query=db.from('groups').update({sheet_players:JSON.parse(players),sheet_revision:nextRevision}).eq('id',groupId);
+              const fallback=await (revision===null?query.is('sheet_revision',null):query.eq('sheet_revision',revision)).select('id').maybeSingle();
+              confirmed=!fallback.error&&Boolean(fallback.data);
+            }else confirmed=!result.error&&result.data===nextRevision;
           } catch {
             // The update may have committed before the response was lost.
           }

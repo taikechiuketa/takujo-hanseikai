@@ -13,7 +13,7 @@
 #userDetail{width:min(680px,calc(100% - 24px));max-height:85vh;overflow:auto}
 </style>
 <script defer src="./vendor/supabase-2.119.0.js"></script>
-<script defer src="./usage.js?v=1"></script>
+<script defer src="./usage.js?v=members-20261117"></script>
 </head>
 <body><main>
 <header class="brand-header"><div><h1>利用状況</h1><p>卓上反省会 ／ 運営ダッシュボード</p></div></header>
@@ -31,9 +31,9 @@
 <section class="card"><h2>週ごとの利用</h2><div class="table-scroll" id="usageWeeks"></div></section>
 <section class="card"><h2>ユーザー別利用状況</h2>
 <label>利用段階<select id="usageStage"><option value="">すべて</option></select></label>
-<p class="hint">セット数と半荘数は選択期間、利用段階と最終対局日は全期間の記録です。</p>
+<p class="hint">所属卓のセット数と半荘数・入力更新回数は選択期間、利用段階と最終対局日は全期間です。入力更新回数は複数人入力機能の導入後から記録します。利用ユーザーは対局のある卓の管理者と期間内に入力・更新した人を重複なく数えます。</p>
 <div class="table-scroll" id="usageUsers"></div></section>
-<section class="card"><h2>卓別利用状況</h2><div class="table-scroll" id="usageGroups"></div></section>
+<section class="card"><h2>グループ別利用状況</h2><p class="hint">登録メンバー数は管理者と入力メンバーの合計です。閲覧だけの人と成績上のプレイヤーは含めません。同じアカウントが複数グループに所属しても、登録ユーザー数では一人です。</p><div class="table-scroll" id="usageGroups"></div></section>
 </div>
 <dialog id="userDetail" aria-labelledby="userDetailTitle">
 <form method="dialog"><button type="submit" class="secondary">閉じる</button></form>

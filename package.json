@@ -2,9 +2,11 @@
   "name": "takujo-hanseikai",
   "private": true,
   "scripts": {
-    "test": "node tests/ui-port.test.cjs && node tests/cloud-safety.test.cjs && node tests/public-ui.test.cjs && node tests/community-ui.test.cjs && node tests/push-ui.test.cjs && node tests/community-context.test.cjs && node tests/pwa.test.cjs"
+    "test": "node tests/ui-port.test.cjs && node tests/cloud-safety.test.cjs && node tests/public-ui.test.cjs && node tests/community-ui.test.cjs && node tests/push-ui.test.cjs && node tests/community-context.test.cjs && node tests/pwa.test.cjs && node tests/membership-ui.test.cjs && node tests/membership-db.test.mjs",
+    "test:membership": "node tests/membership-ui.test.cjs && node tests/membership-db.test.mjs"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.16",
     "fake-indexeddb": "6.2.8",
     "jsdom": "31.0.1"
   }

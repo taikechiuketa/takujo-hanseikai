@@ -10,4 +10,6 @@
 
 開発時は `python3 -m http.server 8000` で配信し、`index.html?local=1` を開くと明示的な端末内試用ができます。クラウドの卓にはgroupパラメーターとログインが必要です。
 
-テストはNode 22以降で `npm ci && npm test`。テストは擬似アカウント・卓・RPCを使用します。
+テストはNode 22以降で `npm ci && npm test`。画面テストは擬似アカウント・卓・RPCを使用し、権限テストはPGliteの実PostgreSQLで全マイグレーションと入力メンバー権限を検証します。
+
+入力メンバー機能のDB反映: 卓上反省会専用SupabaseのSQL Editorで [setup-group-editors.sql](supabase/setup-group-editors.sql) を実行します。再実行可能。手順は画面説明を参照してください。
