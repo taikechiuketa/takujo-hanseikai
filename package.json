@@ -2,7 +2,7 @@
   "name": "takujo-hanseikai",
   "private": true,
   "scripts": {
-    "test": "node tests/ui-port.test.cjs && node tests/cloud-safety.test.cjs && node tests/public-ui.test.cjs && node tests/community-ui.test.cjs && node tests/push-ui.test.cjs && node tests/community-context.test.cjs && node tests/pwa.test.cjs && node tests/membership-ui.test.cjs && node tests/membership-db.test.mjs",
+    "test": "node tests/ui-port.test.cjs && node tests/cloud-safety.test.cjs && node tests/public-ui.test.cjs && node tests/community-ui.test.cjs && node tests/push-ui.test.cjs && node tests/community-context.test.cjs && node tests/pwa.test.cjs && node tests/membership-ui.test.cjs && node tests/membership-db.test.mjs && node tests/recovery-safety.test.cjs && node tests/privacy-db.test.mjs",
     "test:membership": "node tests/membership-ui.test.cjs && node tests/membership-db.test.mjs"
   },
   "devDependencies": {

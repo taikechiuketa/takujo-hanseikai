@@ -13,3 +13,5 @@
 テストはNode 22以降で `npm ci && npm test`。画面テストは擬似アカウント・卓・RPCを使用し、権限テストはPGliteの実PostgreSQLで全マイグレーションと入力メンバー権限を検証します。
 
 入力メンバー機能のDB反映: 卓上反省会専用SupabaseのSQL Editorで [setup-group-editors.sql](supabase/setup-group-editors.sql) を実行します。再実行可能。手順は画面説明を参照してください。
+
+公開前レビューの修正と反映手順：[release-hardening-20261117.md](docs/release-hardening-20261117.md)。入力メンバー導入済みDBには [修正用SQL](supabase/release-hardening.sql) を適用してください。

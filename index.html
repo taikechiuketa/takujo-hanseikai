@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#171b21"><title>卓上反省会｜対局・成績</title><link rel="stylesheet" href="./sheet.css?v=palette-save-1"><script src="./ranking-charts.js?v=1"></script><script src="./rule-format.js?v=1"></script><script src="./template-groups.js?v=rule-format-1"></script><script src="./vendor/supabase-2.119.0.js" defer></script><script src="./cloud-sheet.js?v=members-20261117" defer></script><link rel="stylesheet" href="./score-view.css?v=master-selection-20261116"><script src="./set-analysis.js"></script><script src="./group-recovery.js"></script></head><body><div id="saveToast" role="status" hidden></div><p id="cloudStatus" role="status" hidden></p><main id="sheetApp" hidden><div id="cloudControls" hidden><a id="groupCommunityLink" hidden>参加募集・通知</a> <a class="back-link" href="./account.html"><span aria-hidden="true">‹</span> マイグループ</a> <button id="cloudSave" type="button" hidden>保存を再試行</button></div><header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>対局・成績管理</p></div></header>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#171b21"><title>卓上反省会｜対局・成績</title><link rel="stylesheet" href="./sheet.css?v=palette-save-1"><script src="./ranking-charts.js?v=1"></script><script src="./rule-format.js?v=1"></script><script src="./template-groups.js?v=rule-format-1"></script><script src="./vendor/supabase-2.119.0.js" defer></script><script src="./cloud-sheet.js?v=release-20261117-1" defer></script><link rel="stylesheet" href="./score-view.css?v=master-selection-20261116"><script src="./set-analysis.js"></script><script src="./group-recovery.js?v=release-20261117-1"></script></head><body><div id="saveToast" role="status" hidden></div><p id="cloudStatus" role="status" hidden></p><main id="sheetApp" hidden><div id="cloudControls" hidden><a id="groupCommunityLink" hidden>参加募集・通知</a> <a class="back-link" href="./account.html"><span aria-hidden="true">‹</span> マイグループ</a> <button id="cloudSave" type="button" hidden>保存を再試行</button></div><header class="brand-header"><img id="groupLogo" class="brand-logo" alt="" width="74" height="74" hidden><div><h1 id="groupTitle">卓上反省会</h1><p>対局・成績管理</p></div></header>
 <div class="app-status"><span id="accountState">読み込み中…</span><button class="secondary" id="accountLogout" hidden>この端末からログアウト</button></div><div id="workspacePages"><p id="demoSettingsNav"><a id="demoSettings" hidden>試作卓の設定</a></p>
 <section class="card" id="appearanceCard">
   <h2>対局ルール・点数表</h2>
@@ -29,6 +29,7 @@ if(cloudId){
     const status=document.getElementById('cloudStatus');
     status.hidden=false;
     status.textContent=error.message;
+    if(error.recoveryScope)HanseiRecovery.addRescueExport(status,error.recoveryScope);
     const link=document.createElement('a');
     link.href='./account.html';
     link.textContent='グループ一覧へ';
@@ -43,7 +44,7 @@ if(!cloud){
   demoSettings.hidden=false;
 }
 const storage=cloud?.storage||window.localStorage;
-try{await HanseiRecovery.checkpoint(cloud?.scope||'local:'+groupPrefix,'before-ui-upgrade',{entries:[['current',storage.getItem(groupPrefix+'current')],['history',storage.getItem(groupPrefix+'history')],['players',storage.getItem(groupPrefix+'players')]]});}catch{const status=document.getElementById('cloudStatus');status.hidden=false;status.textContent='復旧コピーを保護できませんでした。保存領域を確認して再読み込みしてください。';return;}
+try{await HanseiRecovery.checkpoint(cloud?.scope||'local:'+groupPrefix,'before-ui-upgrade',{entries:[['current',storage.getItem(groupPrefix+'current')],['history',storage.getItem(groupPrefix+'history')],['players',storage.getItem(groupPrefix+'players')]]});}catch{const status=document.getElementById('cloudStatus');status.hidden=false;status.textContent='復旧コピーを保護できませんでした。保存領域を確認して再読み込みしてください。';HanseiRecovery.addRescueExport(status,cloud?.scope||'local:'+groupPrefix);return;}
 const recoveryScope=cloud?.scope||'local:'+groupPrefix;
 const protect=(kind,data)=>HanseiRecovery.checkpoint(recoveryScope,kind,data);
 const historyEditKey='hansei-history-edit:'+recoveryScope;
@@ -191,7 +192,7 @@ function showMaster(mode){
 }
 function renderMaster(){
   const active=new Set(state.players.map(p=>p.masterId));
-  $('masterList').innerHTML=master.map(m=>`<div class="master-row"><label><input type="checkbox" aria-label="${esc(m.name)}を選択" data-master-check="${esc(m.id)}" ${active.has(m.id)?'disabled':selectedMasterIds.has(m.id)?'checked':''}><span>${esc(m.name)}</span>${active.has(m.id)?'<span class="hint">参加中</span>':''}</label>${masterMode==='manage'?`<label class="hint"><input type="checkbox" data-master-ranking="${esc(m.id)}" ${m.rankingVisible===false?'':'checked'}>ランキングに表示</label>`:''}<div class="buttons"><button class="secondary" data-master-rename="${esc(m.id)}">編集</button><button class="danger" data-master-delete="${esc(m.id)}">削除</button></div></div>`).join('')||'<p class="hint">まだ登録されていません</p>';
+  $('masterList').innerHTML=master.map(m=>`<div class="master-row"><label><input type="checkbox" aria-label="${esc(m.name)}を選択" data-master-check="${esc(m.id)}" ${active.has(m.id)?'disabled':selectedMasterIds.has(m.id)?'checked':''}><span>${esc(m.name)}</span>${active.has(m.id)?'<span class="hint">参加中</span>':''}</label>${masterMode==='manage'&&(!cloud||cloud.isOwner===true)?`<label class="hint"><input type="checkbox" data-master-ranking="${esc(m.id)}" ${m.rankingVisible===false?'':'checked'}>ランキングに表示</label>`:''}<div class="buttons"><button class="secondary" data-master-rename="${esc(m.id)}">編集</button><button class="danger" data-master-delete="${esc(m.id)}">削除</button></div></div>`).join('')||'<p class="hint">まだ登録されていません</p>';
   updateMasterSelection();
 }
 function addFromMaster(ids){for(const mid of ids){const m=master.find(x=>x.id===mid);if(!m||state.players.some(p=>p.masterId===mid))continue;const id=uid();state.players.push({id,masterId:mid,name:m.name,chips:''});state.rounds.forEach(r=>r.scores[id]='')}save();render()}
@@ -248,8 +249,13 @@ function archiveCurrent(){
   save();
   return true;
 }
-function endHistoryEdit(){
-  localStorage.removeItem(historyEditKey);
+let historyDraftAwaitingSave;
+function clearConfirmedHistoryDraft(){
+  if(historyDraftAwaitingSave&&localStorage.getItem(historyEditKey)===historyDraftAwaitingSave)localStorage.removeItem(historyEditKey);
+  historyDraftAwaitingSave=undefined;
+}
+function endHistoryEdit(clearDraft=true){
+  if(clearDraft)localStorage.removeItem(historyEditKey);
   state=editing.current;
   editing=null;
   $('cancelEdit').hidden=true;
@@ -298,7 +304,9 @@ $('finishSet').onclick=()=>{
   if(cloud)cloud.save();
   render();
 };
-$('saveSet').onclick=()=>{
+let historySaveBusy=false;
+$('saveSet').onclick=async()=>{
+  if(historySaveBusy)return;
   if(cloud&&$('cloudSave').disabled)return;
   if(!confirmSetSave())return;
   if(editing){
@@ -307,16 +315,23 @@ $('saveSet').onclick=()=>{
       alert('このセットの履歴が変更されました。編集をやめて、履歴を開き直してください。');
       return;
     }
-    history[editing.index]=state;
+    const edit=editing,editedSet=JSON.parse(JSON.stringify(state));
+    history[edit.index]=editedSet;
+    historySaveBusy=true;$('workspacePages').inert=true;
     try{
+      // Protect the edited history before replacing its only durable draft.
+      // If either storage is full, leave the original history draft available.
+      await protect('before-history-save',{data:{current:edit.current,history,master},draft:localStorage.getItem(historyEditKey)});
+      if(editing!==edit)throw Error('History changed');
+      const sourceDraft=localStorage.getItem(historyEditKey);
       storage.setItem(ARCHIVE_KEY,JSON.stringify(history));
-
+      const retained=!cloud||cloud.persistDraft?.()!==false;
+      historyDraftAwaitingSave=cloud?sourceDraft:undefined;
+      endHistoryEdit(retained);
+      if(cloud){const saved=await cloud.save();if(saved===true)clearConfirmedHistoryDraft();}
     }catch{
-      alert('セット履歴に保存できませんでした。');
-      return;
-    }
-    endHistoryEdit();
-    if(cloud)cloud.save();
+      alert('履歴の変更を安全に保存できませんでした。入力中の下書きは削除していません。バックアップしてください。');
+    }finally{historySaveBusy=false;$('workspacePages').inert=Boolean(cloud?.conflict);}
     return;
   }
   if(archiveCurrent()){
@@ -452,6 +467,7 @@ $('masterList').addEventListener('change',event=>{
   if(selection){if(selection.checked&&!selection.disabled)selectedMasterIds.add(selection.dataset.masterCheck);else selectedMasterIds.delete(selection.dataset.masterCheck);updateMasterSelection();return;}
   const checkbox=event.target.closest('[data-master-ranking]');
   if(!checkbox)return;
+  if(cloud&&cloud.isOwner!==true){renderMaster();return;}
   const player=master.find(m=>m.id===checkbox.dataset.masterRanking);
   if(!player)return;
   const previous=player.rankingVisible;
@@ -1047,7 +1063,7 @@ if(cloud){
     switchPage('stats');
   }else{
     save();
-    cloud.connect({ current:KEY, history:ARCHIVE_KEY, master:MASTER_KEY, notify:showSaveToast, onSaved:clearSavedMasterNotice });
+    cloud.connect({ current:KEY, history:ARCHIVE_KEY, master:MASTER_KEY, notify:showSaveToast, onSaved:()=>{clearSavedMasterNotice();clearConfirmedHistoryDraft();} });
   }
 }
 
@@ -1138,8 +1154,10 @@ function recoveryData(record){
  }
 }
 $('downloadRecovery').onclick=async()=>{
- try{await protect('manual-export',{data:liveData(),draft:localStorage.getItem(historyEditKey)});await HanseiRecovery.download(recoveryScope);}
- catch{$('recoveryInfo').textContent='書き出せませんでした。保存領域を確認してください。';}
+ let retained=true;
+ try{await protect('manual-export',{data:liveData(),draft:localStorage.getItem(historyEditKey)});}catch{retained=false;}
+ try{await HanseiRecovery.download(recoveryScope);$('recoveryInfo').textContent=retained?'復旧コピーを書き出しました。':'新しいコピーは追加できませんでしたが、保存済みコピーと端末の下書きを書き出しました。';}
+ catch{$('recoveryInfo').textContent='書き出せませんでした。サイトのデータを削除せず、保存領域を確認してください。';}
 };
 $('listRecovery').onclick=async()=>{
  try{

@@ -104,7 +104,8 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
   let allowLeaveAfterLogout=false;
   const scope=auth.user.id+':'+groupId;
   const protect=(kind,data)=>HanseiRecovery.checkpoint(scope,kind,data);
-  await protect('db-before-open',{current:group.sheet_draft,history,master:group.sheet_players,revision:group.sheet_revision});
+  try{await protect('db-before-open',{current:group.sheet_draft,history,master:group.sheet_players,revision:group.sheet_revision});}
+  catch(error){error.recoveryScope=scope;throw error;}
   const el = id => document.getElementById(id);
   const status = el('cloudStatus');
   const storageData = new Map([
@@ -141,7 +142,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
     window.addEventListener('pagehide',()=>releaseEditorLock?.());
   }
   return {
-    storage,scope,protect,conflict:Boolean(conflict),
+    storage,scope,protect,isOwner,conflict:Boolean(conflict),
     async logout(){
       await protect('before-logout',{entries:[...storageData],recovery:JSON.parse(localStorage.getItem(recoveryKey)||'null')});
       const {error}=await db.auth.signOut({scope:'local'});
@@ -212,6 +213,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
           return true;
         } catch { return false; }
       }
+      this.persistDraft=()=>keepDraft();
       changed = () => {
         if (conflict) return;
         const retained = keepDraft();
@@ -336,7 +338,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
             if (saveError.code !== 'FETCH_ERROR' && saveError.code) pending = undefined;
             keepDraft();
             button.hidden = false;
-            status.textContent = '保存できませんでした。入力を確認して再試行してください。';
+            status.textContent = saveError.code==='42501' ? '入力権限がないか、管理者だけが変更できる公開設定・非公開プレイヤーの情報が含まれています。管理者に確認してください。入力は端末に保持しています。' : '保存できませんでした。入力を確認して再試行してください。';
             showSetStatus(status.textContent);
             keys.notify(status.textContent);
             return;
@@ -355,6 +357,7 @@ async function openCloudSheet(groupId, settingsOnly = false, readOnly = false) {
           showSetStatus(button.hidden ? 'DB保存済み' : '未保存の変更があります。');
           keys.notify(status.textContent);
           keys.onSaved();
+          return true;
         } catch {
           button.hidden = false;
           status.textContent = '保存結果を確認できませんでした。再試行してください。';

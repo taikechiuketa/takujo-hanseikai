@@ -4,14 +4,39 @@ const API='https://hansei-community.finepumpkin4.chatgpt.site/api/community';
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const NAME='hansei-community-name-v1',TOKEN='hansei-community-device-v1';let PUSH='hansei-community-push-v1',share,context,room;
 const rules={normal:'三麻',north:'四人三麻',yonma:'四麻',undecided:'未定'};
-let token,events=[],selected=null,page='list',editing=null,busy=false,pushBusy=false,pushCanTest=false,testCooldownUntil=0,detailGeneration=0,lastMessages='';
+let token,events=[],selected=null,page='list',editing=null,busy=false,pushBusy=false,pushCanTest=false,testCooldownUntil=0,detailGeneration=0,lastMessages='',lastDetail='',joinComposing=false,detailLoading=0;
 function status(text){$('globalStatus').textContent=text;}
 function storedName(){return localStorage.getItem(NAME)||'';}
 function rememberName(value){const name=value.trim();if(!name||name.length>24)throw Error('表示名を1〜24文字で入力してください。');localStorage.setItem(NAME,name);return name;}
 async function api(path,method='GET',body,activeShare=share){
  const response=await fetch(API+path,{method,headers:{Authorization:'Bearer '+activeShare+'.'+token,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:AbortSignal.timeout(20000)});
- const data=await response.json().catch(()=>({error:'サーバーの応答を確認できません。'}));if(!response.ok){const error=Error(data.error||'接続に失敗しました。');error.status=response.status;error.code=data.code;error.retryAfter=data.retryAfter;throw error;}return data;
+ let data;try{data=await response.json();}catch{throw Error('サーバーの応答を確認できませんでした。同じ内容で再試行してください。');}if(!response.ok){const error=Error(data.error||'接続に失敗しました。');error.status=response.status;error.code=data.code;error.retryAfter=data.retryAfter;throw error;}return data;
 }
+function pendingKey(slot){return 'hansei-community-pending-v1:'+room+':'+token+':'+slot;}
+function readPending(slot){try{const raw=localStorage.getItem(pendingKey(slot));if(!raw)return null;const value=JSON.parse(raw);if(typeof value.id!=='string'||!value.payload||typeof value.payload!=='object')throw Error();return value;}catch{throw Error('前回の送信情報を読み込めません。端末のデータを消さずに管理者へ相談してください。');}}
+async function postOnce(slot,path,payload){
+ let pending=readPending(slot);
+ if(pending&&JSON.stringify(pending.payload)!==JSON.stringify(payload)&&!confirm('前の送信結果が未確認です。まず変更前の内容で再送して結果を確認します。現在の入力は残します。続けますか？'))return null;
+ if(!pending){pending={id:crypto.randomUUID(),payload};try{localStorage.setItem(pendingKey(slot),JSON.stringify(pending));}catch{throw Error('再送用の情報を端末に保存できません。まだ送信していません。');}}
+ try{
+  const result=await api(path,'POST',{...pending.payload,request_id:pending.id});
+  if(!result||typeof result.id!=='string')throw Error('保存結果を確認できませんでした。同じ内容で再試行してください。');
+  localStorage.removeItem(pendingKey(slot));return {result,sent:pending.payload};
+ }catch(error){
+  if(error.status>=400&&error.status<500&&![408,429].includes(error.status)&&error.code!=='IDEMPOTENCY_CONFLICT')localStorage.removeItem(pendingKey(slot));
+  throw error;
+ }
+}
+function detailInputActive(){return joinComposing||document.activeElement?.id==='joinName';}
+function drawDetail(e){
+ if(!e||!Array.isArray(e.participants))return;
+ const serialized=JSON.stringify(e);if(serialized===lastDetail||detailInputActive())return;
+ const old=$('joinName'),draft=old?.value;renderDetail(e);lastDetail=serialized;
+ if(draft!==undefined&&$('joinName'))$('joinName').value=draft;
+}
+$('eventDetail').addEventListener('compositionstart',event=>{if(event.target.id==='joinName')joinComposing=true;});
+$('eventDetail').addEventListener('compositionend',event=>{if(event.target.id==='joinName')joinComposing=false;});
+$('eventDetail').addEventListener('focusout',()=>{queueMicrotask(()=>{if(page==='detail'&&selected&&!detailInputActive())drawDetail(selected);});});
 function navigate(next){page=next;detailGeneration++;['list','detail','form','notifications'].forEach(p=>$(p+'Page').hidden=p!==next);status('');window.scrollTo(0,0);}
 function setUrl(id){const url=new URL('./community.html',location.href);if(id)url.searchParams.set('event',id);url.hash=share;history.replaceState(null,'',url);}
 function day(date){return new Intl.DateTimeFormat('ja-JP',{month:'long',day:'numeric',weekday:'short',timeZone:'Asia/Tokyo'}).format(new Date(date+'T12:00:00+09:00'));}
@@ -40,16 +65,45 @@ function renderDetail(e){
  if($('toggleClosed'))$('toggleClosed').onclick=()=>action(()=>api('/events/'+e.id,'PATCH',{...e,closed:!e.closed}));
  $('shareEvent').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);$('actionStatus').textContent='募集リンクをコピーしました。';}catch{$('actionStatus').textContent='このページのURLをコピーして共有してください。';}};
 }
-async function loadDetail(id,quiet=false){const gen=detailGeneration;
- try{const [e,chat]=await Promise.all([api('/events/'+id),api('/events/'+id+'/messages')]);if(page!=='detail'||gen!==detailGeneration)return;selected=e;renderDetail(e);const serialized=JSON.stringify(chat.messages);
+async function loadDetail(id,quiet=false){const gen=detailGeneration;detailLoading++;
+ try{const [e,chat]=await Promise.all([api('/events/'+id),api('/events/'+id+'/messages')]);if(page!=='detail'||gen!==detailGeneration)return;selected=e;drawDetail(e);const serialized=JSON.stringify(chat.messages);
  if(serialized!==lastMessages){lastMessages=serialized;$('messages').innerHTML=chat.messages.map(m=>`<article class="chat-message ${m.mine?'mine':''}"><div class="chat-meta"><span><b>${esc(m.name)}</b> ${m.host?'〈募集者〉':''}${m.mine?'〈あなた〉':''} · ${new Intl.DateTimeFormat('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Tokyo'}).format(m.created)}</span>${m.canDelete?'<button class="text" type="button" data-delete="'+m.id+'">削除</button>':''}</div><p>${esc(m.body)}</p></article>`).join('');$('messages').querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{if(confirm('この投稿を削除しますか？'))action(()=>api('/events/'+id+'/messages','DELETE',{id:b.dataset.delete}));});}
  if(!quiet)status('');
- }catch(e){if(e.status===404){selected=null;navigate('list');setUrl(null);await loadList();status('募集が削除されたか、見つかりません。');}else if(!quiet)status(e.message);}}
-async function openEvent(id){selected={id};lastMessages='';$('eventDetail').replaceChildren();$('messages').replaceChildren();$('chatName').value=storedName();$('chatBody').value='';$('chatStatus').textContent='';navigate('detail');setUrl(id);await loadDetail(id);}
-async function action(fn){if(busy)return;busy=true;const id=selected.id;$('eventDetail').querySelectorAll('button').forEach(b=>b.disabled=true);try{await fn();await loadDetail(id);}catch(e){status(e.message);}finally{busy=false;$('eventDetail').querySelectorAll('button').forEach(b=>b.disabled=false);}}
+ }catch(e){if(page!=='detail'||gen!==detailGeneration)return;if(e.status===404){selected=null;navigate('list');setUrl(null);await loadList();status('募集が削除されたか、見つかりません。');}else if(!quiet)status(e.message);}finally{detailLoading--;}}
+async function openEvent(id){selected={id};lastMessages='';lastDetail='';joinComposing=false;$('eventDetail').replaceChildren();$('messages').replaceChildren();$('chatName').value=storedName();$('chatBody').value='';$('chatStatus').textContent='';navigate('detail');setUrl(id);await loadDetail(id);}
+async function action(fn){if(busy)return;busy=true;detailGeneration++;const gen=detailGeneration,id=selected.id;$('eventDetail').querySelectorAll('button').forEach(b=>b.disabled=true);try{await fn();if(page==='detail'&&gen===detailGeneration)await loadDetail(id);}catch(e){if(page==='detail'&&gen===detailGeneration)status(e.message);}finally{busy=false;$('eventDetail').querySelectorAll('button').forEach(b=>b.disabled=false);}}
 function openForm(e=null){editing=e;navigate('form');$('eventForm').reset();$('formStatus').textContent='';$('formTitle').textContent=e?'募集内容を編集':'新しく募集する';$('publishEvent').textContent=e?'変更を保存する':'募集を公開する';$('notifyLabel').hidden=$('notifyHelp').hidden=!!e;const form=$('eventForm');const data=e||{name:storedName(),date:today(),place:'いつもの場所',title:'',start:'',end:'',note:'',rule:'normal',vacancies:2,existing:1};for(const key of ['name','title','date','start','end','place','rule','vacancies','existing','note']){const field=form.elements.namedItem(key);if(field instanceof HTMLSelectElement&&!Array.from(field.options).some(o=>o.value===String(data[key]))){field.add(new Option(String(data[key])+'人',String(data[key])));}field.value=data[key];}}
-$('eventForm').onsubmit=async event=>{event.preventDefault();if(busy)return;busy=true;$('publishEvent').disabled=true;$('formStatus').textContent='保存しています…';try{const form=$('eventForm'),data=Object.fromEntries(new FormData(form));data.name=rememberName(data.name);data.vacancies=Number(data.vacancies);data.existing=Number(data.existing);data.notify=form.elements.namedItem('notify').checked;let id;if(editing){id=editing.id;await api('/events/'+id,'PATCH',{...data,version:editing.version,closed:editing.closed});}else{id=(await api('/events','POST',data)).id;}await openEvent(id);}catch(e){$('formStatus').textContent=e.message;}finally{busy=false;$('publishEvent').disabled=false;}};
-$('chatForm').onsubmit=async event=>{event.preventDefault();if(busy||!selected)return;busy=true;const button=$('chatForm').querySelector('button');button.disabled=true;const id=selected.id;try{const name=rememberName($('chatName').value);await api('/events/'+id+'/messages','POST',{name,body:$('chatBody').value});$('chatBody').value='';$('chatStatus').textContent='送信しました。';await loadDetail(id);}catch(e){$('chatStatus').textContent=e.message;}finally{busy=false;button.disabled=false;}};
+$('eventForm').onsubmit=async event=>{
+ event.preventDefault();if(busy)return;busy=true;const gen=detailGeneration;$('publishEvent').disabled=true;$('formStatus').textContent='保存しています…';
+ try{
+  const form=$('eventForm'),data=Object.fromEntries(new FormData(form));data.name=rememberName(data.name);data.vacancies=Number(data.vacancies);data.existing=Number(data.existing);data.notify=form.elements.namedItem('notify').checked;
+  let id;if(editing){id=editing.id;await api('/events/'+id,'PATCH',{...data,version:editing.version,closed:editing.closed});}
+  else{
+   const outcome=await postOnce('event-create','/events',data);if(!outcome){if(page==='form'&&gen===detailGeneration)$('formStatus').textContent='送信を中止しました。前の送信情報と現在の入力は残っています。';return;}
+   id=outcome.result.id;
+   const current=Object.fromEntries(new FormData(form));current.name=current.name.trim();current.vacancies=Number(current.vacancies);current.existing=Number(current.existing);current.notify=form.elements.namedItem('notify').checked;
+   if(JSON.stringify(current)!==JSON.stringify(outcome.sent)){
+    if(page==='form'&&gen===detailGeneration){$('formStatus').textContent='前回の募集は保存済みです。現在の入力は残しました。別の募集として公開する場合は、もう一度「募集を公開する」を押してください。';const link=document.createElement('a');link.href='./community.html?'+new URLSearchParams({event:id})+'#'+share;link.textContent='保存済みの募集を開く';$('formStatus').append(' ',link);}return;
+   }
+  }
+  if(page==='form'&&gen===detailGeneration)await openEvent(id);
+ }catch(e){if(page==='form'&&gen===detailGeneration)$('formStatus').textContent=e.message;}
+ finally{busy=false;$('publishEvent').disabled=false;}
+};
+$('chatForm').onsubmit=async event=>{
+ event.preventDefault();if(busy||!selected)return;busy=true;detailGeneration++;const gen=detailGeneration,button=$('chatForm').querySelector('button'),id=selected.id;button.disabled=true;
+ try{
+  const name=rememberName($('chatName').value),body=$('chatBody').value;
+  const outcome=await postOnce('message:'+id,'/events/'+id+'/messages',{name,body});
+  if(!outcome){if(page==='detail'&&gen===detailGeneration)$('chatStatus').textContent='送信を中止しました。前の送信情報と現在の入力は残っています。';return;}
+  if(page==='detail'&&gen===detailGeneration&&selected?.id===id){
+   const unchanged=$('chatBody').value===outcome.sent.body&&$('chatName').value.trim()===outcome.sent.name;
+   if(unchanged)$('chatBody').value='';
+   $('chatStatus').textContent=unchanged?'送信しました。':'前回の送信は完了しました。現在の下書きは残しています。';await loadDetail(id);
+  }
+ }catch(e){if(page==='detail'&&gen===detailGeneration&&selected?.id===id)$('chatStatus').textContent=e.message;}
+ finally{busy=false;button.disabled=false;}
+};
 $('followChat').onchange=async()=>{if(!selected)return;const enabled=$('followChat').checked;try{await api('/events/'+selected.id+'/follow','POST',{enabled});status(enabled?'この募集の新着通知をONにしました。端末の通知もONにしてください。':'この募集の新着通知をOFFにしました。');}catch(e){$('followChat').checked=!enabled;status(e.message);}};
 $('newEvent').onclick=()=>openForm();$('showPast').onchange=renderList;$('refreshEvents').onclick=()=>loadList();$('refreshChat').onclick=()=>selected&&loadDetail(selected.id);
 function toList(){navigate('list');setUrl(null);loadList();} $('backToList').onclick=$('closeNotifications').onclick=toList;
@@ -72,14 +126,48 @@ function cooldown(seconds){testCooldownUntil=Date.now()+Math.max(1,Number(second
 function pushButtons(disabled){pushBusy=disabled;['enablePush','disablePush'].forEach(id=>$(id).disabled=disabled);updateTestButton();}
 try{testCooldownUntil=Number(sessionStorage.getItem('hansei-push-test-retry-v2'))||0;}catch{}
 setInterval(updateTestButton,1000);updateTestButton();
+const pushRestoreKey='hansei-push-restore-pending-v1';
+function visitedPushGroups(){try{const groups=JSON.parse(localStorage.getItem('hansei-community-visited')||'[]');return Array.isArray(groups)?groups.filter(g=>typeof g.share==='string'&&typeof g.room==='string'):[];}catch{return [];}}
+async function renewSubscription(reg,old,config){
+ localStorage.setItem(pushRestoreKey,'on');localStorage.setItem(PUSH,'off');
+ if(old){
+  localStorage.setItem('hansei-push-expired-endpoint',old.endpoint);
+  if(await old.unsubscribe()!==true)throw Error('古い通知登録を解除できませんでした。ブラウザを開き直して、もう一度ONにしてください。');
+ }
+ const raw=atob(config.publicKey.replace(/-/g,'+').replace(/_/g,'/'));
+ const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:Uint8Array.from(raw,c=>c.charCodeAt(0))});
+ if(old&&sub.endpoint===old.endpoint)throw Error('新しい通知先を発行できませんでした。ブラウザの通知設定を確認し、開き直してから再試行してください。');
+ return sub;
+}
+async function restorePushGroups(sub){
+ const groups=visitedPushGroups().filter(g=>g.share!==share&&localStorage.getItem('hansei-community-push-v1:'+g.room)==='on');
+ const results=await Promise.allSettled(groups.map(g=>api('/subscription','POST',{subscription:sub.toJSON(),recruit:true},g.share)));
+ results.forEach((result,i)=>{if(result.status==='rejected')localStorage.setItem('hansei-community-push-v1:'+groups[i].room,'off');});
+ if(results.some(r=>r.status==='rejected'))status('一部の卓の通知を再接続できませんでした。該当する卓で通知をONにし直してください。');
+ localStorage.removeItem(pushRestoreKey);localStorage.removeItem('hansei-push-expired-endpoint');
+}
 $('enablePush').onclick=async()=>{if(pushBusy)return;pushButtons(true);try{
  if(!('Notification'in window)||!('PushManager'in window))throw Error(iphone?'先にホーム画面に追加し、そのアイコンから開いてください。':'Web通知対応のブラウザで開いてください。');
  // Permission prompt starts directly in the user gesture, before network work.
  const permission=Notification.permission==='granted'?'granted':await Notification.requestPermission();if(permission!=='granted')throw Error('通知が許可されませんでした。設定ガイドを確認してください。');
  const [reg,config]=await Promise.all([registration(),api('/config')]);if(!config.publicKey||config.push?.ready===false)throw Error('サーバー側の通知設定を確認しています。端末の再登録は不要です。');
- let sub=await reg.pushManager.getSubscription();const expired=localStorage.getItem('hansei-push-expired-endpoint');let reconnected=false;if(sub&&sub.endpoint===expired){await sub.unsubscribe();sub=null;reconnected=true;}if(!sub){const raw=atob(config.publicKey.replace(/-/g,'+').replace(/_/g,'/'));sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:Uint8Array.from(raw,c=>c.charCodeAt(0))});}
- await api('/subscription','POST',{subscription:sub.toJSON(),recruit:true});localStorage.setItem(PUSH,'on');
- if(reconnected){let groups=[];try{groups=JSON.parse(localStorage.getItem('hansei-community-visited')||'[]');}catch{}if(Array.isArray(groups)){const results=await Promise.allSettled(groups.filter(g=>g.share!==share&&localStorage.getItem('hansei-community-push-v1:'+g.room)==='on').map(g=>api('/subscription','POST',{subscription:sub.toJSON(),recruit:true},g.share)));if(results.some(r=>r.status==='rejected'))status('一部の卓の通知を再接続できませんでした。該当する卓で通知をONにし直してください。');}localStorage.removeItem('hansei-push-expired-endpoint');}await pushState();
+ let sub=await reg.pushManager.getSubscription();const expired=localStorage.getItem('hansei-push-expired-endpoint');
+ if(sub&&sub.endpoint===expired)sub=await renewSubscription(reg,sub,config);
+ if(!sub){
+  const raw=atob(config.publicKey.replace(/-/g,'+').replace(/_/g,'/'));
+  sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:Uint8Array.from(raw,c=>c.charCodeAt(0))});
+ }
+ try{await api('/subscription','POST',{subscription:sub.toJSON(),recruit:true});}
+ catch(error){
+  if(error.status!==409||error.code!=='PUSH_OWNERSHIP_CHANGED')throw error;
+  // Never claim an endpoint registered by another anonymous identity. Only this
+  // browser can invalidate its current subscription and obtain a different one.
+  sub=await renewSubscription(reg,sub,config);
+  await api('/subscription','POST',{subscription:sub.toJSON(),recruit:true});
+ }
+ localStorage.setItem(PUSH,'on');
+ if(localStorage.getItem(pushRestoreKey)==='on')await restorePushGroups(sub);
+ await pushState();
  }catch(e){$('pushStatus').textContent=e.message;}finally{pushButtons(false);}};
 $('disablePush').onclick=async()=>{if(pushBusy)return;pushButtons(true);try{const reg=await registration(),sub=await reg.pushManager.getSubscription();if(sub){await api('/subscription','DELETE',{endpoint:sub.endpoint});/* The browser subscription can be shared by other groups; only remove this room's server registration. */}localStorage.setItem(PUSH,'off');await pushState();}catch(e){$('pushStatus').textContent=e.message;}finally{pushButtons(false);}};
 $('testPush').onclick=async()=>{if(pushBusy||!pushCanTest||Date.now()<testCooldownUntil)return;pushButtons(true);let attempted=false,testedSubscription;try{const reg=await registration(),sub=await reg.pushManager.getSubscription();if(!sub||localStorage.getItem(PUSH)!=='on')throw Error('先に募集通知をONにしてください。');testedSubscription=sub;attempted=true;const result=await api('/test','POST',{endpoint:sub.endpoint});cooldown(result.retryAfter||30);$('pushStatus').textContent='通知サービスに送信しました。端末に表示されるか確認してください。';}catch(e){if(attempted)cooldown(e.retryAfter||30);if(e.code==='PUSH_EXPIRED'){pushCanTest=false;localStorage.setItem(PUSH,'off');if(testedSubscription)localStorage.setItem('hansei-push-expired-endpoint',testedSubscription.endpoint);}$('pushStatus').textContent=e.message;}finally{pushButtons(false);}};
@@ -88,7 +176,7 @@ async function boot(){try{context=await window.HanseiCommunityContext();share=co
 localStorage.setItem('hansei-community-last-share',share);let visited=[];try{visited=JSON.parse(localStorage.getItem('hansei-community-visited')||'[]');}catch{}if(!Array.isArray(visited))visited=[];visited=[{share,name:config.group,room},...visited.filter(v=>v.share!==share)].slice(0,20);localStorage.setItem('hansei-community-visited',JSON.stringify(visited));$('visitedGroupsLabel').hidden=visited.length<2;$('visitedGroups').replaceChildren(...visited.map(v=>new Option(v.name,v.share)));$('visitedGroups').value=share;$('visitedGroups').onchange=()=>{location.href='./community.html?switch=1#'+$('visitedGroups').value;};
 $('communityApp').inert=false;const id=new URL(location.href).searchParams.get('event');setUrl(id);if(id)await openEvent(id);else await loadList();}catch(error){status(error.message||'卓を開けません。閲覧共有リンクから開き直してください。');$('communityApp').inert=false;$('listPage').hidden=true;$('sharedEntry').hidden=false;for(const section of ['listPage','detailPage','formPage','notificationsPage'])$(section).querySelectorAll('button,input,select,textarea').forEach(e=>e.disabled=true);}}
 boot();
-setInterval(()=>{if(document.hidden||busy)return;if(page==='detail'&&selected)loadDetail(selected.id,true);},5000);
+setInterval(()=>{if(document.hidden||busy||detailLoading)return;if(page==='detail'&&selected)loadDetail(selected.id,true);},5000);
 setInterval(()=>{if(!document.hidden&&!busy&&page==='list')loadList(true);},15000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!busy){if(page==='detail'&&selected)loadDetail(selected.id);else if(page==='list')loadList();}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!busy&&!detailLoading){if(page==='detail'&&selected)loadDetail(selected.id);else if(page==='list')loadList();}});
 })();
